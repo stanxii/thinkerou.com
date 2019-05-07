@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '如何在 Go 语言中实现单例模式' />
+  <meta property = 'og:description' content = '有关单例模式的相关内容可以参考《设计模式之单例模式》
+单例模式的核心在于保证系统中一个类只有一个实例且该实例易于外界访问。
+1. 非线程安全 Lazy 方式 非线程安全的单例模式是最常见的实现方式，但是它不能在多线程情况下使用，在 Go 中实现如：
+ type Singleton struct { …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/design-patterns-singleton-go/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/posts/mill-4166018_1280.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/design-patterns-singleton-go/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/posts/mill-4166018_1280.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>如何在 Go 语言中实现单例模式</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<p>有关单例模式的相关内容可以参考<a href="http://thinkerou.com/2017-02/design-patterns-singleton/">《设计模式之单例模式》</a></p>
+
+<p>单例模式的核心在于<strong>保证系统中一个类只有一个实例且该实例易于外界访问</strong>。</p>
+
+<h2 id="1-非线程安全-lazy-方式">1. 非线程安全 Lazy 方式</h2>
+
+<p>非线程安全的单例模式是最常见的实现方式，但是它不能在多线程情况下使用，在 Go 中实现如：</p>
+
+<pre><code>    type Singleton struct {
+        // something
+    }
+    
+    var instance *Singleton
+    
+    func GetInstance() *Singleton {
+        if instance == nil {
+            instance = &amp;Singleton{}
+        }
+        
+        return instance
+    }
+</code></pre>
+
+<p>这种写法对应着 CPP 中的实现方式。</p>
+
+<h2 id="2-线程锁方式">2. 线程锁方式</h2>
+
+<p>在 Go 语言中提供了包 <code>sync/mutex</code> 用于构建多个 goroutine 间的同步逻辑。</p>
+
+<p>在 Go 中使用线程锁实现的单例模式，如下：</p>
+
+<pre><code>    type Singleton struct {
+        // something
+    }
+    
+    var (
+        instance *Singleton
+        mtx Sync.Mutex
+    )
+    
+    func GetInstance() *Singleton {
+        mtx.Lock()
+        defer mtx.Unlock()
+        
+        if instance == nil {
+            instance = &amp;Singleton{}
+        }
+        
+        return instance
+    }
+</code></pre>
+
+<h2 id="3-检查锁方式">3. 检查锁方式</h2>
+
+<p>正如在<a href="http://thinkerou.com/2017-02/design-patterns-singleton/">文中</a>提到的<strong>双检测锁</strong>实现方式，在 Go 中可以实现为：</p>
+
+<pre><code>    type Singleton struct {
+        // something
+    }
+    
+    var (
+        instance *Singleton
+        mtx Sync.Mutex
+    )
+    
+    func GetInstance() *Singleton {
+        if instance == nil {
+            mtx.Lock()
+            defer mtx.Unlock()
+            
+            if instance == nil {
+                instance = &amp;Singleton{}
+            }
+        }
+        return instance
+    }
+</code></pre>
+
+<p>这种实现方式中，编译器会优化没有检查实例存储状态。如果使用 <code>sync/atomic</code> 包可以自动加载和标记状态，如下实现：</p>
+
+<pre><code>    package main
+    
+    import (
+        &quot;sync&quot;
+        &quot;sync/atomic&quot;
+    )
+    
+    type Singleton struct {
+        // something
+    }
+    
+    var (
+        initialized uint32
+        instance *Singleton
+        mtx Sync.Mutex
+    )
+    
+    func GetInstance() *Singleton {
+        if atomic.LoadUInt32(&amp;initialized) == 1 {
+            return instance
+        }
+        
+        mtx.Lock()
+        defer mtx.Unlock()
+        
+        if initialized == 0 {
+            instance = &amp;Singleton{}
+            atomic.StoreUint32(&amp;initialized, 1)
+        }
+        
+        return instance
+    }
+</code></pre>
+
+<p>如果读过 Go 源码，或许对上面的实现代码会感到熟悉，正式来源于源码中的 <code>once.go</code> 的实现方式：</p>
+
+<pre><code>	package sync
+	
+	import (
+		&quot;sync/atomic&quot;
+	)
+	
+	// Once is an object that will perform exactly one action.
+	type Once struct {
+		m    Mutex
+		done uint32
+	}
+	
+	// Do calls the function f if and only if Do is being called for the
+	// first time for this instance of Once. In other words, given
+	// 	var once Once
+	// if once.Do(f) is called multiple times, only the first call will invoke f,
+	// even if f has a different value in each invocation. A new instance of
+	// Once is required for each function to execute.
+	//
+	// Do is intended for initialization that must be run exactly once. Since f
+	// is niladic, it may be necessary to use a function literal to capture the
+	// arguments to a function to be invoked by Do:
+	// 	config.once.Do(func() { config.init(filename) })
+	//
+	// Because no call to Do returns until the one call to f returns, if f causes
+	// Do to be called, it will deadlock.
+	//
+	// If f panics, Do considers it to have returned; future calls of Do return
+	// without calling f.
+	//
+	func (o *Once) Do(f func()) {
+		if atomic.LoadUint32(&amp;o.done) == 1 {
+			return
+		}
+		// Slow-path.
+		o.m.Lock()
+		defer o.m.Unlock()
+		if o.done == 0 {
+			defer atomic.StoreUint32(&amp;o.done, 1)
+			f()
+		}
+	}
+</code></pre>
+
+<p>看完 <code>once.go</code> 的代码，那是不是可以直接使用 <code>sync.Once</code> 来实现单例模式呢？答案是肯定的。</p>
+
+<h2 id="4-更完美方式">4. 更完美方式</h2>
+
+<p>以一个实际项目为示例来说明：</p>
+
+<blockquote>
+<p>实现一个全局的计算器</p>
+</blockquote>
+
+<p>直接使用 <code>sync.Once</code> 实现的单例模式如下：</p>
+
+<pre><code>    package main
+
+    import (
+        &quot;sync&quot;
+    )
+
+    var (
+        instance *Counter
+        once sync.Once
+    }
+
+    type Counter struct {
+        number int
+        mux sync.RWMutx
+    }
+
+    func (c *Counter) Add(n int) {
+        c.mux.Lock()
+        defer c.mux.Unlock()
+    
+        c.number += n
+    }
+
+    func (c *Counter) Sub(n int) {
+        c.mux.Lock()
+        defer c.mux.Unlock()
+    
+        c.number -= n
+    }
+
+    func (c *Counter) Get() int {
+        c.mux.RLock()
+        defer c.mux.RUnlock()
+    
+        return c.number
+    }
+
+    func GetInstance() *Counter {
+        once.Do(func() {
+            instance = &amp;Counter{
+                number: 0,
+            }
+        })
+    
+        return instance
+    }
+</code></pre>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/design-patterns-singleton-go\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/design-patterns-singleton-go\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

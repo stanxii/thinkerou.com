@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '使用 Go vendor' />
+  <meta property = 'og:description' content = 'Go vendor 介绍 Go 语言在发布 1.5 版本时，就说可以使用自身提供的 vendor 特性，但是需要设置如下环境变量：
+GO15VENDOREXPERIMENT=1  在发布 1.6 版本时，该环境变量的值已经默认设置为 1 了，该值可以使用 go env 命令查看。
+根据官方的说法，在 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/go-vendor/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/simple.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/go-vendor/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/simple.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>使用 Go vendor</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="go-vendor-介绍">Go vendor 介绍</h2>
+
+<p>Go 语言在发布 1.5 版本时，就说可以使用自身提供的 <code>vendor</code> 特性，但是需要设置如下环境变量：</p>
+
+<pre><code>GO15VENDOREXPERIMENT=1
+</code></pre>
+
+<p>在发布 1.6 版本时，该环境变量的值已经默认设置为 1 了，该值可以使用 <code>go env</code> 命令查看。</p>
+
+<p>根据官方的说法，在发布 1.7 版本时，将去掉该环境变量，默认开启 <code>vendor</code> 特性。</p>
+
+<p>现在也有很多包管理工具，比如 <code>Godep</code>、<code>govendor</code>、<code>gvt</code> 等等，并且也都支持语言本身提供的 <code>vendor</code> 特性，那么我的问题是：</p>
+
+<blockquote>
+<p>不使用第三方包管理工具，如何使用 <code>vendor</code> 特性呢？</p>
+</blockquote>
+
+<p>一开始 google 了好多文档都没有符合要求的，最后就在 <a href="http://stackoverflow.com/questions/37237036/how-should-i-use-vendor-in-go-1-6">stackover flow</a> 上求问才找到解决方法。</p>
+
+<h4 id="1-设置环境变量">1. 设置环境变量</h4>
+
+<blockquote>
+<p>GOPATH=&ldquo;/Users/thinkerou/xyz/&rdquo;</p>
+</blockquote>
+
+<h4 id="2-建立测试需要的目录">2. 建立测试需要的目录</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/xyz$ pwd
+/Users/thinkerou/xyz
+thinkerou@MacBook-Pro-thinkerou:~/xyz$ ls
+src
+thinkerou@MacBook-Pro-thinkerou:~/xyz$ cd src
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ ls
+ou
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ cd ou
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ ls
+main.go vendor
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ cd vendor/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou/vendor$ ls
+vendor.json
+</code></pre>
+</blockquote>
+
+<p>就是需要在 <code>$GOPATH</code> 目录下建立 <code>src/my-program-name</code> 目录，同时需要在目录 <code>src/my-program-name</code> 目录下建立 <code>vendor</code> 目录。</p>
+
+<blockquote>
+<p>注：vendor.json 暂时还没有用处，应该是只有使用第三方包管理工具时才有用。</p>
+</blockquote>
+
+<h4 id="3-编写测试文件">3. 编写测试文件</h4>
+
+<p>测试的 <code>main.go</code> 文件内容为：</p>
+
+<blockquote>
+<pre><code>package main
+import (
+    &quot;fmt&quot;
+    &quot;net/http&quot;
+    &quot;github.com/zenazn/goji&quot;
+    &quot;github.com/zenazn/goji/web&quot;
+)
+func hello(c web.C, w http.ResponseWriter, r *http.Request) {
+     fmt.Fprintf(w, &quot;Hello, %s!&quot;, c.URLParams[&quot;name&quot;])
+}
+func main() {
+    goji.Get(&quot;/hello/:name&quot;, hello)
+    goji.Serve()
+}
+</code></pre>
+</blockquote>
+
+<p>示例程序中使用到了第三方 <code>goji</code> 库。</p>
+
+<h4 id="4-获取第三方库文件">4. 获取第三方库文件</h4>
+
+<p>使用命令 <code>go get</code> 获取依赖的第三方库文件，如下：</p>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ ls
+main.go  vendor.j
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ go get
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ ls
+main.go  vendor.j
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ cd ..
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ ls
+github.com ou
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ cd github.com/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/github.com$ ls
+zenazn
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/github.com$ cd zenazn/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/github.com/zenazn$ ls
+goji
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/github.com/zenazn$ cd goji/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/github.com/zenazn/goji$ ls
+LICENSE            bind               example            graceful           serve_appengine.go
+README.md          default.go         goji.go            serve.go           web
+</code></pre>
+</blockquote>
+
+<p>从上可知，在 <code>$GOPATH/src</code> 目录下出现了第三方依赖库的目录 <code>github.com/zenazn/goji/</code> 树。</p>
+
+<p>在获取到第三方库文件后，使用命令 <code>go build</code> 就会生成可执行文件，或使用命令 <code>go run main.go</code> 直接运行程序。</p>
+
+<p>到这里，会发现还是使用老方法来运行程序的，并没有使用到本文要讨论的话题：<strong>如何使用 vendor 特性？</strong></p>
+
+<h4 id="5-使用-vendor-特性">5. 使用 vendor 特性</h4>
+
+<p>为了使用上新的 <code>vendor</code> 特性，需要做一些操作：</p>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/xyz$ pwd
+/Users/thinkerou/xyz
+thinkerou@MacBook-Pro-thinkerou:~/xyz$ ls
+bin pkg src
+thinkerou@MacBook-Pro-thinkerou:~/xyz$ cd src/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ ls
+github.com ou
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src$ cd ou/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ ls
+main.go vendor
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou$ cd vendor/
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou/vendor$ ls
+vendor.json
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou/vendor$ mv ../../github.com .
+thinkerou@MacBook-Pro-thinkerou:~/xyz/src/ou/vendor$ ls
+github.com  vendor.json
+</code></pre>
+</blockquote>
+
+<p>从上可知，使用原来的老方法，在 <code>$GOPATH</code> 目录下已经产生了 <code>bin</code> 和 <code>pkg</code> 目录，都是熟知的。</p>
+
+<p>为了支持 <code>vendor</code> 特性，需要将使用 <code>go get</code> 命令获取到的第三方目录 <code>剪切或复制</code> 到 <code>src/my-program-name/vendor/</code> 目录下。</p>
+
+<p>如此，使用命令 <code>go build</code> 或 <code>go run main.go</code> 即可执行程序，并不会去重新下载依赖的第三方库文件，而是直接使用 <code>vendor</code> 目录下的文件。</p>
+
+<h4 id="6-白话-vendor-原理">6. 白话 vendor 原理</h4>
+
+<p>简单来说，<code>vendor</code> 的原理就是：</p>
+
+<blockquote>
+<p>在执行 <code>go build</code> 或 <code>go run</code> 命令时，会首先去判断 <code>vendor</code> 是否存在，以及是否存在依赖的第三方库文件，如果满足则使用之；否则，就走原来的流程去获取第三方库文件到 <code>$GOPATH/src/</code> 目录下。</p>
+</blockquote>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="http://stackoverflow.com/questions/37237036/how-should-i-use-vendor-in-go-1-6">How should I use vendor in Go 1.6?</a></p></li>
+
+<li><p><a href="https://github.com/golang/go/wiki/PackageManagementTools">PackageManagementTools</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/go-vendor\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/go-vendor\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

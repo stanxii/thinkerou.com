@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Go 语言 sync 包使用记录' />
+  <meta property = 'og:description' content = '在 Go 语言中 sync 包提供了互斥锁、读写锁等基本同步原语，除了 Once 和 WaitGroup 类型外，其他类型基本都是为底层函数库而准备，上层次的同步最好还是通过 channel 来完成。
+更多更全的信息和使用说明请见官网文档
+1. Mutex 类型 一个 Mutex 就是一个互斥锁，这 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/go-sync-package/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/posts/nuclear-4168906_1280.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/go-sync-package/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/posts/nuclear-4168906_1280.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Go 语言 sync 包使用记录</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<p>在 Go 语言中 <code>sync</code> 包提供了互斥锁、读写锁等基本同步原语，除了 <code>Once</code> 和 <code>WaitGroup</code> 类型外，其他类型基本都是为底层函数库而准备，上层次的同步最好还是通过 <code>channel</code> 来完成。</p>
+
+<p>更多更全的信息和使用说明请见<a href="https://golang.org/pkg/sync/">官网文档</a></p>
+
+<h3 id="1-mutex-类型">1. Mutex 类型</h3>
+
+<p>一个 Mutex 就是一个互斥锁，这类锁可以用作其他结构的一部分，Mutex 的零值是一个<strong>未上锁</strong>的互斥锁。</p>
+
+<p>Mutex 类定义为：</p>
+
+<pre><code>// A Mutex is a mutual exclusion lock.
+// Mutexes can be created as part of other structures;
+// the zero value for a Mutex is an unlocked mutex.
+//
+// A Mutex must not be copied after first use.
+type Mutex struct {
+    state int32
+    sema  uint32
+}
+</code></pre>
+
+<p>Mutex 类实现了 <code>Locker</code> 接口：</p>
+
+<pre><code>// A Locker represents an object that can be locked and unlocked.
+type Locker interface {
+    Lock()
+    Unlock()
+}
+</code></pre>
+
+<h4 id="1-1-lock-方法">1.1 Lock 方法</h4>
+
+<p>Lock 方法原型为：</p>
+
+<pre><code>func (m *Mutex) Lock() {}
+</code></pre>
+
+<p>对 m 进行加锁，如果 m 已经被加锁，则执行该方法的 goroutine 将被阻塞直到 m 可用为止。</p>
+
+<h4 id="1-2-unlock-方法">1.2 Unlock 方法</h4>
+
+<p>Unlock 方法原型为：</p>
+
+<pre><code>func (m *Mutex) Unlock() {}
+</code></pre>
+
+<p>对 m 进行解锁，如果 m 并未加锁，则会引发一个运行时错误。被加锁的 Mutex 并不与特定的 goroutine 绑定，在一个 goroutine 里面对 Mutex 进行加锁，然后在另一个 goroutine 里面对 Mutex 进行解锁，这是可行的。</p>
+
+<h3 id="2-waitgroup-类型">2. WaitGroup 类型</h3>
+
+<p>一个 WaitGroup 会等待一系列 goroutine 直到它们<strong>全部</strong>运行完毕。主 goroutine 通过调用 <code>Add</code> 方法来设置需要等待的 goroutine 数量，而每个运行的 goroutine 在它们运行完毕时调用 <code>Done</code> 方法，调用 <code>Wait</code> 方法可以阻塞直到所有 goroutine 都运行完毕为止。</p>
+
+<p>WaitGroup 类型定义为：</p>
+
+<pre><code>// A WaitGroup waits for a collection of goroutines to finish.
+// The main goroutine calls Add to set the number of
+// goroutines to wait for. Then each of the goroutines
+// runs and calls Done when finished. At the same time,
+// Wait can be used to block until all goroutines have finished.
+//
+// A WaitGroup must not be copied after first use.
+type WaitGroup struct {
+    noCopy noCopy
+
+    // 64-bit value: high 32 bits are counter, low 32 bits are waiter count.
+    // 64-bit atomic operations require 64-bit alignment, but 32-bit
+    // compilers do not ensure it. So we allocate 12 bytes and then use
+    // the aligned 8 bytes in them as state.
+    state1 [12]byte
+    sema   uint32
+}
+</code></pre>
+
+<h4 id="2-1-add-方法">2.1 Add 方法</h4>
+
+<p>Add 方法原型为：</p>
+
+<pre><code>func (m *WaitGroup) Add(delta int) {}
+</code></pre>
+
+<p>为 WaitGroup 计数器加上给定的增量 delta 值，其中 delta 值可以为负数。</p>
+
+<p>当计数器的值变为 0 时，所有被 Wait 阻塞的 goroutine 都将被释放，当计数器的值变为负数时，Add 调用将引发一个 panic。</p>
+
+<p><strong>注意：</strong>Add 操作必须在创建 goroutine 的语句之前调用，或者在其他需要等待的事件之前调用；在重复使用同一个 WaitGroup 对不同的独立事件集合进行等待时，新的 Add 调用必须发生在之前的所有 Wait 调用均已返回的情况时。</p>
+
+<h4 id="2-2-done-方法">2.2 Done 方法</h4>
+
+<p>Done 方法原型为：</p>
+
+<pre><code>func (m *WaitGroup) Done() {}
+</code></pre>
+
+<p>对 WaitGroup 计数器执行减 1 操作。</p>
+
+<h4 id="2-3-wait-方法">2.3 Wait 方法</h4>
+
+<p>Wait 方法原型为：</p>
+
+<pre><code>func (wg *WaitGroup) Wait()
+</code></pre>
+
+<p>它会阻塞直到 WaitGroup 计数器的值为 0 为止。</p>
+
+<h4 id="2-4-示例">2.4 示例</h4>
+
+<p>该示例会并发的获取给定的多个url的返回值，并使用WaitGroup进行租塞，直到所有获取操作都已完成。</p>
+
+<pre><code>var wg sync.WaitGroup
+var urls = []string{
+        &quot;http://www.golang.org/&quot;,
+        &quot;http://www.google.com/&quot;,
+        &quot;http://www.somestupidname.com/&quot;,
+}
+for _, url := range urls {
+        // 对 WaitGroup 计数器执行加一操作
+        wg.Add(1)
+        // 启动一个 goroutine ，用于获取给定的 URL 
+        go func(url string) {
+            // 在 goroutine 执行完毕时，对计数器执行减一操作
+            defer wg.Done()
+            // 获取 URL
+            http.Get(url)
+        }(url)
+}
+
+// 等待直到所有 HTTP 获取操作都执行完毕为止
+wg.Wait()
+</code></pre>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/go-sync-package\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/go-sync-package\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

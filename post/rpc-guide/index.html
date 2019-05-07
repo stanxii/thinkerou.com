@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'RPC 原理初尝' />
+  <meta property = 'og:description' content = '背景 在很早以前就了解过点 RPC 相关的概念，就仅此而已，写的那点网络示例程序也都是本机调用的，直到最近学习 gRPC 才发现还有好多知识需要学习，或许部分原因也是由于以前的工作内容主要是客户端的吧。
+现在接触的是服务端相关的东西，所以有必要好好学习下 RPC 等相关知识，公司系统涉及很多服务且都 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/rpc-guide/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/stuck.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/rpc-guide/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/stuck.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>RPC 原理初尝</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="背景">背景</h2>
+
+<p>在很早以前就了解过点 <a href="https://en.wikipedia.org/wiki/Remote_procedure_call">RPC</a> 相关的概念，就仅此而已，写的那点网络示例程序也都是本机调用的，直到最近学习 <a href="http://www.grpc.io/">gRPC</a> 才发现还有好多知识需要学习，或许部分原因也是由于以前的工作内容主要是客户端的吧。</p>
+
+<p>现在接触的是服务端相关的东西，所以有必要好好学习下 RPC 等相关知识，公司系统涉及很多服务且都部署在不同的地域不同的机器上，维护也是由不同的团队维护的。</p>
+
+<p>所以就需要学习如何编写、部署、搭建新的服务？如何依赖、调用其他服务？如何发布新服务给其他团队使用？等等。</p>
+
+<h2 id="rpc-介绍">RPC 介绍</h2>
+
+<h3 id="1-rpc-简介">1. RPC 简介</h3>
+
+<ul>
+<li>RPC 是 Remote Procedure Call 的缩写, 即远程过程/函数调用</li>
+<li>RPC 用于进程间或跨网络通讯</li>
+<li>RPC 具有很好的横向扩展能力, 更适合网络/分布式环境通讯</li>
+</ul>
+
+<h3 id="2-rpc-原理">2. RPC 原理</h3>
+
+<p>RPC 主要涉及到的角色有：</p>
+
+<ul>
+<li>Client</li>
+<li>Client Stub</li>
+<li>Server</li>
+<li>Server Stub</li>
+</ul>
+
+<p>详细原理请<a href="https://thinkerou.com/static/image/rpc.jpg">原理图</a>进行查看(注：图片来源于参考资料4)。</p>
+
+<p><img src="https://thinkerou.com/static/image/rpc.jpg" alt="原理图" /></p>
+
+<p>根据该原理图可知，完成一次 RPC 需要经历这样几个步骤：</p>
+
+<blockquote>
+<p>1）Client 以本地调用方式调用服务</p>
+
+<p>2）Client Stub 接收调用后将方法、参数等组装成能够进行网络传输的消息体（编码）</p>
+
+<p>3）Client Stub 找到服务地址，并将消息发送到服务端</p>
+
+<p>4）Server Stub 收到消息后进行解析（解码）</p>
+
+<p>5）Server Stub 根据解码结果调用本地的服务</p>
+
+<p>6）本地服务执行并将结果返回给 Server Stub</p>
+
+<p>7）Server Stub 将返回结果打包成消息并发送给 Client（编码）</p>
+
+<p>8）Client Stub 接收到消息，并进行解析（解码）</p>
+
+<p>9）Client 得到最终结果完成调用</p>
+</blockquote>
+
+<h3 id="3-rpc-核心概念">3. RPC 核心概念</h3>
+
+<ul>
+<li>调用者 (只管发出请求, 而不需要关心是谁如何去完成)</li>
+<li>被调用者 (只负责完成请求, 而不需要关心是谁需要该数据)</li>
+<li>调用者和被调用者的中间代理(RPC调用框架)</li>
+<li>数据打包方式</li>
+<li>数据传输方式</li>
+</ul>
+
+<h3 id="4-grpc-如何做的">4. gRPC 如何做的？</h3>
+
+<p>根据前述可以大致了解 RPC 的原理、流程了，那么具体完成一个 RPC 框架需要做些什么？会有哪些难点？如何解决？等等。</p>
+
+<p>结合最近在阅读的 gRPC 框架和参考资料，列出后续在阅读 gRPC 框架时需要解决、总结的问题：</p>
+
+<ul>
+<li>gRPC 如何做到透明化远程服务调用？</li>
+<li>gRPC 如何对消息进行编码和解码？
+
+<ul>
+<li>消息数据结构使用 Proto Buffer</li>
+<li>序列化反序列化</li>
+</ul></li>
+<li>gRPC 如何进行网络通信？
+
+<ul>
+<li>使用什么网络通信模型，NIO？BIO？or other？</li>
+<li>RequestID</li>
+</ul></li>
+</ul>
+
+<h3 id="5-如何发布新服务">5. 如何发布新服务？</h3>
+
+<p>后续准备结合 zookeeper 或者 etcd 和 gRPC 来研究，尽请期待。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="https://en.wikipedia.org/wiki/Remote_procedure_call">Remote procedure call</a></p></li>
+
+<li><p><a href="https://www.cs.cf.ac.uk/Dave/C/node33.html">Remote Procedure Calls (RPC)</a></p></li>
+
+<li><p><a href="http://www.grpc.io/">GRPC</a></p></li>
+
+<li><p><a href="http://www.cnblogs.com/LBSer/p/4853234.html">你应该知道的RPC原理</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/rpc-guide\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/rpc-guide\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

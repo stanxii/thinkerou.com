@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'C&#43;&#43; Lambda 介绍' />
+  <meta property = 'og:description' content = 'C&#43;&#43; lambda 表达式格式 C&#43;&#43; lambda 表达式规范有如下几种形式：
+| 编号 | 表达式 | | &mdash; | &mdash; | | (1) | capture mutable exception attribute -&gt; return {body} | | (2) | …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/cpp-lambda/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/read.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/cpp-lambda/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/read.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>C&#43;&#43; Lambda 介绍</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="c-lambda-表达式格式">C++ lambda 表达式格式</h2>
+
+<p>C++ lambda 表达式规范有如下几种形式：</p>
+
+<p>| 编号 | 表达式 |
+| &mdash;  | &mdash; |
+| (1)  | <a href="params">capture</a> mutable exception attribute -&gt; return {body} |
+| (2) | <a href="params">capture</a> -&gt; return {body} |
+| (3) | <a href="params">capture</a> {body} |
+| (4) | [capture] {body} |</p>
+
+<p><strong>表达式形式说明</strong>：</p>
+
+<ul>
+<li>(1)： 完整的 lambda 表达式形式；</li>
+<li>(2)： const 类型的 lambda 表达式形式，该类型表达式<strong>不能更改 capture 列表中的变量的值</strong>；</li>
+<li>(3)： 没有返回值类型的 lambda 表达式，但是返回值类型可以推导出来，使用如下规则：
+
+<ul>
+<li>如果 body 包含 return 语句，则 lambda 表达式返回类型由 return 语句的返回类型确定；</li>
+<li>如果没有 return 语句，则函数类似于 void func(params) 函数。</li>
+</ul></li>
+<li>(4)： 没有参数列表的 lambda 表达式，类似于无参函数 func()。</li>
+</ul>
+
+<p><strong>mutable</strong>： 说明 lambda 表达式的 body 可以修改 capture 列表中的变量的值，并且可以访问被捕获对象的 non-const 方法；</p>
+
+<p><strong>exception</strong>： 说明 lambda 表达式是否抛出异常，以及抛出什么异常，类似于 void func() throw(A, B)；</p>
+
+<p><strong>attribute</strong>： 用来声明属性。</p>
+
+<p><strong>params</strong>： 用来指定 lambda 表达式的参数。</p>
+
+<p><strong>return</strong>： 用来指定 lambda 表达式的返回类型。</p>
+
+<p><strong>capture</strong>： 指定了在可见域范围内 lambda 表达式的代码内可见的外部变量的列表，具体格式说明如下：</p>
+
+<ul>
+<li>[a, &amp;b]： 变量 a 以值的方式被捕获， 变量 b 以引用的方式被捕获；</li>
+<li>[this]： 以值的方式捕获 this 指针；</li>
+<li>[&amp;]： 以引用的方式捕获所有的外部自动变量；</li>
+<li>[=]： 以值的方式捕获所有的外部自动变量；</li>
+<li>[]： 不捕获外部的任何变量。</li>
+</ul>
+
+<h2 id="lambda-表达式实例">lambda 表达式实例</h2>
+
+<p><a href="https://github.com/thinkerou/Interview-Questions-And-Solutions/blob/master/src/lambda.cpp">示例代码</a></p>
+
+<pre><code>class CLambdaTest
+{
+public:
+    CLambdaTest() : m_iData(10) {}
+    ~CLambdaTest() {}
+
+    void TestLambda()
+    {
+        std::vector&lt;int&gt; vecTemp;
+        vecTemp.push_back(1);
+        vecTemp.push_back(2);
+
+        // 无函数对象参数，输出：1 2
+        {
+            for_each(vecTemp.begin(), vecTemp.end(), [](int v){
+                std::cout &lt;&lt; v &lt;&lt; std::endl; 
+            });
+        }
+
+        // 以值方式传递作用域内所有可见的局部变量（包括this），输出：11 12
+        {
+            int a = 10;
+            for_each(vecTemp.begin(), vecTemp.end(), [=](int v){ 
+                std::cout &lt;&lt; v + a &lt;&lt; std::endl;
+            });
+        }
+
+        // 以引用方式传递作用域内所有可见的局部变量（包括this），输出：11 13 12
+        {
+            int a = 10;
+            for_each(vecTemp.begin(), vecTemp.end(), [&amp;](int v)mutable{
+                std::cout &lt;&lt; v + a &lt;&lt; std::endl; ++a;
+            });
+            std::cout &lt;&lt; a &lt;&lt; std::endl;
+        }
+
+        // 以值方式传递局部变量a，输出：11 13 10
+        {
+            int a = 10;
+            for_each(vecTemp.begin(), vecTemp.end(), [a](int v)mutable{
+                std::cout &lt;&lt; v + a &lt;&lt; std::endl; ++a;
+            });
+            std::cout &lt;&lt; a &lt;&lt; std::endl;
+        }
+
+        // 以引用方式传递局部变量a，输出：11 13 12
+        {
+            int a = 10;
+            for_each(vecTemp.begin(), vecTemp.end(), [&amp;a](int v){
+                std::cout &lt;&lt; v + a &lt;&lt; std::endl; ++a;
+            });
+            std::cout &lt;&lt; a &lt;&lt; std::endl;
+        }
+
+        // 传递this，输出：11 12
+        {
+            for_each(vecTemp.begin(), vecTemp.end(), [this](int v){
+                std::cout &lt;&lt; v + m_iData &lt;&lt; std::endl;
+            });
+        }
+
+        // 除b按引用传递外，其他均按值传递，输出：11 12 17
+        {
+            int a = 10;
+            int b = 15;
+            for_each(vecTemp.begin(), vecTemp.end(), [=, &amp;b](int v){
+                std::cout &lt;&lt; v + a &lt;&lt; std::endl; ++b;
+            });
+            std::cout &lt;&lt; b &lt;&lt; std::endl;
+        }
+
+
+        // 操作符重载函数参数按引用传递，输出：2 3
+        {
+            for_each(vecTemp.begin(), vecTemp.end(), [](int &amp;v){
+                v++;
+            });
+            for_each(vecTemp.begin(), vecTemp.end(), [](int v){
+                std::cout &lt;&lt; v &lt;&lt; std::endl;
+            });
+        }
+
+        // 空的Lambda表达式
+        {
+            [](){}();
+            []{}();
+        }
+    }
+
+private:
+    int m_iData;
+};
+</code></pre>
+
+<h2 id="参考资料">参考资料</h2>
+
+<blockquote>
+<p><a href="http://www.cprogramming.com/c++11/c++11-lambda-closures.html">Lambda Functions in C++11 - the Definitive Guide</a></p>
+</blockquote>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/cpp-lambda\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/cpp-lambda\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

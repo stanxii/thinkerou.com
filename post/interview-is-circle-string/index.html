@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '【面试题】判断字符串列表是否能构造成首尾相连的循环列表' />
+  <meta property = 'og:description' content = '问题描述 给定一系列单词，如：
+ grep, pip, echo, open, net, tag, pre
+ 然后判断这些单词是否能构造成这样的循环列表：
+ grep -&gt; pip -&gt; pre -&gt; echo -&gt; open -&gt; net -&gt; tag …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/interview-is-circle-string/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/artist.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/interview-is-circle-string/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/artist.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>【面试题】判断字符串列表是否能构造成首尾相连的循环列表</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="问题描述">问题描述</h2>
+
+<p>给定一系列单词，如：</p>
+
+<blockquote>
+<p>grep, pip, echo, open, net, tag, pre</p>
+</blockquote>
+
+<p>然后判断这些单词是否能构造成这样的循环列表：</p>
+
+<blockquote>
+<p>grep -&gt; pip -&gt; pre -&gt; echo -&gt; open -&gt; net -&gt; tag -&gt; grep</p>
+</blockquote>
+
+<p>即<strong>前一个单词的尾字符是后一个单词的首字符</strong>。</p>
+
+<p>问题就是：给定单词列表，判断是否能够构成这样的列表。</p>
+
+<h2 id="解决问题">解决问题</h2>
+
+<h3 id="思路1-根据深度遍历或广度遍历判断">思路1：根据深度遍历或广度遍历判断</h3>
+
+<pre><code>1. 从某个单词开始
+2. 然后在剩下的单词中寻找以该单词尾字符开始的单词
+   2.1 如果没找到而列表又没有遍历完，那就不能构造成循环列表了
+   2.2 如果找到一个，则重复步骤2
+   2.3 如果找到多个，则随机选择一个，重复步骤2
+       2.3.1 如果某个能走通整个流程，则能构成循环列表
+       2.3.1 如果某个不能走通，则返回步骤2.3使用剩下的单词的某一个，重复步骤2
+</code></pre>
+
+<p>整个思路就是<strong>深度遍历</strong>或<strong>广度遍历</strong>。</p>
+
+<h3 id="思路2-根据首字符和尾字符个数判断">思路2：根据首字符和尾字符个数判断</h3>
+
+<p>看到这个问题时，我最新想到的就是这个方法，然后我想了下说：<code>思路是这样的，根据首尾字符个数来判断，如果个数不相等一定不能构造成循环列表</code>。但是这时面试官问了这样个问题：</p>
+
+<blockquote>
+<p>如果字符列表是 <code>ab</code> 和 <code>ab</code> 呢？</p>
+</blockquote>
+
+<p>其实他已经误解了我的<strong>首尾字符个数相等</strong>的思路，但是当时我也蒙逼了，所以我就继续想，然后试探性的问了下面试官，<code>我的整个解题思路是没有问题的吧？！</code>，你猜他怎么说？<strong>思路偏差太远了！！！</strong>那么我就只能想其他方法了，也就是<strong>思路1</strong>的笨方法。（或许他的题集里该题的标准答案应该就是思路1吧）</p>
+
+<p>然后我回来后，继续想我的<strong>首尾字符个数相等</strong>的思路，同时在谷歌百度里搜索这道题的解题思路，居然没有这道题，好吧，那我还是自己好好想想这个思路。</p>
+
+<p>整理后，思路是这样的：</p>
+
+<pre><code>1. 构建两个map，分别为first记录首字符出现的次数，last记录尾字符出现的次数
+2. 遍历first，然后在last里找该字符为key的元素
+    2.1 如果没找到，则不能构造循环列表
+    2.2 如果找到，但是它的次数和first对应字符的次数不一样，则不能构造循环列表
+3. 循环，直到结束，则说明可以构造循环列表
+</code></pre>
+
+<p>核心代码如下：</p>
+
+<pre><code>bool is_circle_string(vector&lt;string&gt; input)
+{
+    map&lt;char, int&gt; first;
+    map&lt;char, int&gt; last;
+
+    // 构建first 和 last 字典
+    // 时间复杂度 O(N)
+    vector&lt;string&gt;::iterator it = input.begin();
+    for(; it != input.end(); ++it)
+    {
+        char f = (*it)[0];
+        char l = *((*it).rbegin());
+        if(first.find(f) != first.end())
+        {
+            first[f]++;
+        }
+        else
+        {
+            first.insert(pair&lt;char, int&gt;(f, 1));
+        }
+
+        if(last.find(l) != last.end())
+        {
+            last[l]++;
+        }
+        else
+        {
+            last.insert(pair&lt;char, int&gt;(l, 1));
+        }
+    }
+
+    // 判断是否能构造成环
+    // 时间复杂度 O(logN)
+    map&lt;char, int&gt;::iterator i = first.begin();
+    for(; i != first.end(); ++i)
+    {
+        map&lt;char, int&gt;::iterator j = last.find(i-&gt;first);
+        if(j == last.end() || i-&gt;second != j-&gt;second)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+</code></pre>
+
+<p>关于这个思路是否正确，我暂时没有找到能够失败的case，该思路的数学证明等有空研究下。</p>
+
+<p>如果有其他思路或者该思路有任何错误的地方，欢迎指正！</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><a href="https://github.com/thinkerou/Interview-Questions-And-Solutions/blob/master/src/is_circle_string.cc">详细代码实现</a></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/interview-is-circle-string\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/interview-is-circle-string\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

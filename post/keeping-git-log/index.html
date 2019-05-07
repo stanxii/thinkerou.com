@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Keeping log of Git' />
+  <meta property = 'og:description' content = 'What? I recently migrated the examples of Gin to one separate repository named gin-gonic/examples and built another separate website repository for …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/keeping-git-log/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/keeping-git-log/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Keeping log of Git</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="what">What?</h2>
+
+<p>I recently migrated <a href="https://github.com/gin-gonic/gin/tree/master/examples">the examples of Gin</a> to one separate repository named <a href="https://github.com/gin-gonic/examples">gin-gonic/examples</a> and built another separate <a href="https://gin-gonic.com/">website</a> repository for <a href="https://github.com/gin-gonic/gin">Gin</a> web framework by migrating the <a href="https://github.com/gin-gonic/gin/blob/master/README.md">README.md</a> of <a href="https://github.com/gin-gonic/gin">Gin</a>.</p>
+
+<p>For keeping log of old Git to new repository, how to do it?</p>
+
+<p>we need to slove two cases:</p>
+
+<ul>
+<li>migrated subdirectory</li>
+<li>migrated root file</li>
+</ul>
+
+<h2 id="how">How?</h2>
+
+<p>First, we define the below information:</p>
+
+<pre><code>OLD-REPO: https://github.com/thinkerou/gin.git
+
+MIGRATED-REPO-SUB-DIR-NAME: examples
+
+NEW-REPO-SUB-DIR: https://github.com/gin-gonic/examples.git 
+
+NEW-REPO-ROOT-FILE-NAME: website
+
+NEW-REPO-ROOT-FILE: https://github.com/gin-gonic/website.git
+</code></pre>
+
+<p>Second, we use the following command to keeping log of Git:</p>
+
+<ul>
+<li><p>Cloning old repository and removing origin remote</p>
+
+<pre><code>git clone OLD-REPO NEW-REPO-SUB-DIR-NAME
+cd NEW-REPO-SUB-DIR-NAME
+git remote rm origin 
+</code></pre></li>
+
+<li><p>(Important!) Filtrating the specially history of Git</p>
+
+<pre><code>git filter-branch --tag-name-filter cat --prune-empty --subdirectory-filter MIGRATED-REPO-SUB-DIR-NAME -- --all
+</code></pre></li>
+
+<li><p>Cleaning the object of .git direcotry</p>
+
+<pre><code>git reset --hard
+git for-each-ref --format=&quot;%(refname)&quot; refs/original/ | xargs -n 1 git update-ref -d
+git reflog expire --expire=now --all
+git gc --aggressive --prune=now
+</code></pre></li>
+
+<li><p>Pushing the local repository to origin</p>
+
+<pre><code>git remote add origin NEW-REPO-SUB-DIR
+git push -u origin master
+</code></pre></li>
+</ul>
+
+<p>If the origin repository is empty, the above command is right. Otherwise, we need to use the below command again to push the local repository to <code>dev</code> branch.</p>
+
+<pre><code>git push origin master:dev
+</code></pre>
+
+<ul>
+<li><p>Merging dev branch to master branch</p>
+
+<pre><code>git merge origin/dev --allow-unrelated-histories
+git push origin master
+</code></pre></li>
+</ul>
+
+<p>But, I encounter one new trouble:</p>
+
+<pre><code>fatal: refusing to merge unrelated histories
+Error redoing merge 1234deadbeef1234deadbeef
+</code></pre>
+
+<p>According to &lt;&lt;<a href="https://stackoverflow.com/questions/37937984/git-refusing-to-merge-unrelated-histories-on-rebase">Git refusing to merge unrelated histories on rebase</a>&gt;&gt;, we solve the issue:</p>
+
+<pre><code>git pull origin master --allow-unrelated-histories
+git push origin master
+</code></pre>
+
+<p>As was mentioned above, we can keep log of Git when migrate subdirectory. But migrate root file?</p>
+
+<p>According to <a href="https://stackoverflow.com/questions/5998987/splitting-a-set-of-files-within-a-git-repo-into-their-own-repository-preserving">the StackOverflow question</a>, we can perfect solve it using the following command:</p>
+
+<pre><code>git filter-branch --prune-empty --index-filter 'git ls-tree -r --name-only --full-tree $GIT_COMMIT | grep -v &quot;^README.md$&quot; |grep -v &quot;^git-changelog&quot; | xargs git rm --cached -r' -- --all
+</code></pre>
+
+<p>We use <code>--index-filter</code> parameter not <code>--tag-name-filter</code> here.</p>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/keeping-git-log\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/keeping-git-log\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

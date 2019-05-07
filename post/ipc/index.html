@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '网络IPC（套接字）学习笔记' />
+  <meta property = 'og:description' content = '1. socket 描述符 socket 主要用于运行在不同服务器上的进程之间通信，也可以用于在同一服务器上的进程之间通信。
+socket 描述符则是 socket 的唯一标识，其本质是一种特殊的文件描述符。
+创建 socket 描述符的函数原型为：
+int socket(int domain, …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/ipc/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/posts/jetty-4155214_1280.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/ipc/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/posts/jetty-4155214_1280.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>网络IPC（套接字）学习笔记</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h3 id="1-socket-描述符">1. socket 描述符</h3>
+
+<p>socket 主要用于运行在不同服务器上的进程之间通信，也可以用于在同一服务器上的进程之间通信。</p>
+
+<p>socket 描述符则是 socket 的唯一标识，其本质是一种特殊的<strong>文件描述符</strong>。</p>
+
+<p>创建 socket 描述符的函数原型为：</p>
+
+<pre><code>int socket(int domain, int type, int protocol);
+</code></pre>
+
+<p>参数说明：</p>
+
+<ul>
+<li><p>domain 参数决定了通信的性质，即地址格式等</p>
+
+<ul>
+<li>AF_INET: IPv4因特网域</li>
+<li>AF_INET6: IPv6因特网域</li>
+<li>AF_UNIX: UNIX域</li>
+<li>AF_UNSPEC: 未指定，可以表达任何域的通配符</li>
+</ul></li>
+
+<li><p>type 参数指定类型</p>
+
+<ul>
+<li>SOCK_DGRAM: 固定长度，无连接，不可靠的消息</li>
+<li>SOCK_RAW: IP协议的数据报接口</li>
+<li>SOCK_SEQPACKET: 固定长度，顺序式，面向连接的，可靠的消息</li>
+<li>SOCK_STREAM：顺序式，面向连接的，双向的，可靠的字节流</li>
+</ul></li>
+
+<li><p>protocol 参数代表协议号</p>
+
+<ul>
+<li>0: 使用对于给定 domain 和 type 下的默认协议，在 AF_INET 通信域下， SOCK_STREAM 类型的默认协议是 <strong>TCP协议</strong>，而对于 SOCK_DGRAM 类型的默认协议则是 <strong>UDP协议</strong>。</li>
+</ul></li>
+</ul>
+
+<h3 id="2-网络地址">2. 网络地址</h3>
+
+<p>不同的网络域有不同的地址格式，sockaddr 是地址的通用结构体，如：</p>
+
+<pre><code>struct sockaddr {
+    sa_family_t sa_family; /* address family */
+    char        sa_data[]; /* variable-length address */
+    /* other infomation */
+};
+</code></pre>
+
+<p>其中，sa_family 即是前面提到的网络域。</p>
+
+<p>对于 AF_INET 的地址格式由 sockaddr_in 结构体表示：</p>
+
+<pre><code>struct sockaddr_in {  
+    sa_family_t     sin_family; /* address family */  
+    in_port_t       sin_port; /* port number */  
+    struct in_addr  sin_addr; /* IPv4 address */  
+};  
+
+struct in_addr {  
+    in_addr_t   s_addr; /* IPv4 address */  
+};
+</code></pre>
+
+<p>对于 AF_INET6 的地址格式由 sockaddr_in6 结构体表示：</p>
+
+<pre><code>struct sockaddr_in6 {  
+    sa_family_t     sin6_family; /*address family */  
+    in_port_t       sin6_port; /*port number */  
+    uint32_t        sin6_flowinfo; /*traffic class and flow info */  
+    struct in6_addr     sin6_addr; /*IPv6 address */  
+    uint32_t        sin6_scope_id; /*IPv6 address */  
+};  
+
+struct in6_addr {  
+    uint8_t s6_addr[16]; /* IPv6 address */  
+};
+</code></pre>
+
+<p>需要注意的是，对于 domain 参数，只有 AF_INET 和 AF_INET6 是支持的。</p>
+
+<h3 id="3-建立连接">3. 建立连接</h3>
+
+<p>在成功获取 socket 描述符后，对于服务端，首先需要和具体的网络地址进行绑定，函数原型为：</p>
+
+<pre><code>int bind(int sockfd, const struct sockaddr *addr, socklen_t len);
+</code></pre>
+
+<p>参数说明：</p>
+
+<ul>
+<li>sockaddr 是一个通用的地址结构，因此，任意的网络地址结构都可以作为参数在这里传输</li>
+<li>len 是传递的结构体的长度</li>
+</ul>
+
+<p>如果处理的是<strong>面向连接</strong>的服务（SOCK_STREAM/SOCK_SEQPACKET），则在交换数据前，客户端必须先和服务端建立连接，函数原型为：</p>
+
+<pre><code>int connect(int sockfd, const struct sockaddr *addr, socklen_t len);
+</code></pre>
+
+<p>它会将 sockfd 与 addr 所代表的网络地址建立连接。</p>
+
+<p>在客户端建立连接时，如果服务端没有对该地址进行<strong>监听</strong>，则连接失败，服务端的监听函数原型为：</p>
+
+<pre><code>int listen(int sockfd, int backlog);
+</code></pre>
+
+<p>参数说明：</p>
+
+<ul>
+<li>backlog 表示能够排队最大连接请求数量，它只是为系统提供一个建议值而已。</li>
+</ul>
+
+<p>服务端使用 accept 函数用于接受一个请求，众所周知，建立 TCP 连接是需要进行三次握手的，当客户端调用 connect 函数后，实际上只是发送了一个 SYN 而已，只有当服务端 accept 了这个请求后，才真正完成三次握手，accetp 函数原型为：</p>
+
+<pre><code>int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict len);
+</code></pre>
+
+<p>该函数返回一个 socket 描述符，该描述符与客户端的 socket 描述符建立了一个 TCP 连接，而原先的描述符则仍然可用于接收连接请求。</p>
+
+<p>在调用该函数时，如果还没有等待响应的连接请求，则进程将默认阻塞，直到有请求到达。</p>
+
+<h3 id="4-数据传输">4. 数据传输</h3>
+
+<p>如前所述，socket 描述符是一种文件描述符，所以针对文件描述符的操作也可以直接应用到 socket 描述符上，如 read 和 write 函数等，可以使用它们来收发数据。</p>
+
+<p>也有专门针对 socket 描述符的数据传输操作，最基本的就是 send 和 recv 函数，原型为：</p>
+
+<pre><code>ssize_t send(int sockfd, const void *buf, size_t nbytes, int flags);
+ssize_t recv(int sockfd, void *buf, size_t nbytes, int flags);
+</code></pre>
+
+<p>而针对在无连接的 socket 数据传输中，有 sendto 和 recvfrom 两个函数，函数原型为：</p>
+
+<pre><code>ssize_t sendto(int sockfd, const void *buf, size_t nbytes, int flags,  
+    const struct sockaddr *destaddr, socklen_t destlen);  
+ssize_t recvfrom(int sockfd, void *restrict buf, size_t len, int flags,  
+    struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+</code></pre>
+
+<p>与 send 和 recv 相比只是多了两个参数，在 sendto 中多的两个参数用来指定发送的目的地址；而 recvfrom 则用来在接收数据时获取发送方的地址。</p>
+
+<h3 id="5-连接关闭">5. 连接关闭</h3>
+
+<p>连接方式可以使用普通文件描述符的关闭方式：close 方式，但是这种关闭方式的问题是：只有当最后一个该描述符的活动引用（使用 dup 函数可增加引用）被关闭后，才会真正关闭连接，因此可以考虑使用 shutdown 函数来关闭连接，函数原型为：</p>
+
+<pre><code>int shutdown(int sockfd, int how);
+</code></pre>
+
+<p>参数说明：</p>
+
+<ul>
+<li>how 指定关闭方式
+
+<ul>
+<li>SHUT_RD: 关闭读</li>
+<li>SHUT_WR: 关闭写</li>
+<li>SHUT_RDWR:  关闭读写</li>
+</ul></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/ipc\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/ipc\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

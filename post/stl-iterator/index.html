@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '小心使用 STL 的 erase 函数' />
+  <meta property = 'og:description' content = '1. 基础概念 在 STL 中，容器按照存储方式分为两大类：
+ 以数组形式存储的序列容器，如vector、deque等； 以非连续的节点形式存储的关联容器，如list、set、map等  对于不同类型的容器，在使用 erase 方法来进行元素删除时，需要格外小心，针对 map 的使用注意，请见map …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/stl-iterator/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/frustrated.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/stl-iterator/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/frustrated.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>小心使用 STL 的 erase 函数</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h3 id="1-基础概念">1. 基础概念</h3>
+
+<p>在 STL 中，容器按照存储方式分为两大类：</p>
+
+<ul>
+<li>以数组形式存储的序列容器，如vector、deque等；</li>
+<li>以非连续的节点形式存储的关联容器，如list、set、map等</li>
+</ul>
+
+<p>对于不同类型的容器，在使用 <code>erase</code> 方法来进行元素删除时，需要格外小心，针对 map 的使用注意，请见<a href="http://thinkerou.com/2016-01/stl-map-iterator/">map 迭代器实效问题</a></p>
+
+<h3 id="2-序列容器之vector-deque">2. 序列容器之vector/deque</h3>
+
+<p>对于序列型容器，erase 迭代器不仅使所有指向被删除元素的迭代器失效，还使被删除元素之后的所有迭代器失效。</p>
+
+<p>所以正确的代码书写是：</p>
+
+<pre><code>std::vector&lt;int&gt; vec;
+std::vector&lt;int&gt;::iterator it;
+for(it =vec.begin(); it != vec.end();)
+{
+    if(doDelete(*it)
+    {
+        it = vec.erase(it);
+    }
+    else
+    {
+        it++;
+    }
+}
+</code></pre>
+
+<p>通过 erase 方法的返回值来获取下一个元素的位置。</p>
+
+<h3 id="3-关联容器之list-set-map">3. 关联容器之list/set/map</h3>
+
+<p>而关联容器的 erase 迭代器只是被删除元素的迭代器失效，但返回值是 void，因此不能使用序列容器的书写方式，而是使用这样的书写方式：</p>
+
+<pre><code>std::map&lt;std::string, int&gt; m;
+std::map&lt;std::string, int&gt;::iterator it;
+for(it = m.begin(); it != m.end();)
+{
+    if(canDelete)
+    {
+        m.erase(it++);
+    }
+}
+</code></pre>
+
+<p>在调用 erase 方法前先使用后置自加来获取下一个元素的位置。</p>
+
+<p>需要注意的是，<code>list</code> 是可以使用以上两种方式的任何一种的。
+最后的规则就是：尽量不要使用容器的插入、删除操作之前的迭代器。</p>
+
+<h3 id="4-总结">4. 总结</h3>
+
+<p>因为不同容器类型的实现数据结构不尽相同，所以不同的容器的迭代器的失效情况就会有所区别。</p>
+
+<p>针对 erase 容器中的元素，《Effective STL》条款9给出了相应的原则：</p>
+
+<ul>
+<li>对于关联容器（如map、set等）删除当前的 iterator，仅会使当前的 iterator 失效，只要在 erase 时递增当前 iterator 即可。这是因为 map、set 这样的关联容器是使用红黑树实现的，插入、删除一个节点并不会对其他节点造成影响；</li>
+<li>对于序列容器（如vector、deque等）删除当前的 iterator 会使后面所有元素的 iterator 都失效。这是因为 vector 这样的序列容器使用连续分配的内存实现的，删除一个元素导致后面所有的元素会向前移动一个位置，但 erase 方法可以返回下一个有效的 iterator 又带来了很大的方便；</li>
+<li>对于 list 来说，它使用了不连续分配的内存，但它的 erase 方法也会返回下一个有效的 iterator，所以它可以使用如上两种方法。</li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/stl-iterator\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/stl-iterator\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

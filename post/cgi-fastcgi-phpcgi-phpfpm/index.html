@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '细说 CGI、FastCGI、PHP-CGI 和 PHP-FPM 的关系' />
+  <meta property = 'og:description' content = '概念总结 刚开始学习的 PHP 的时候，就会被几个词搞混：CGI、FastCGI 、PHP-CGI、PHP-FPM，它们都是干什么活的？之间又有些什么联系和区别呢？接下来就先介绍它们的概念。
+1. CGI CGI 是 Common Gateway Interface 的缩写，可以使客户端从网页浏览器 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/cgi-fastcgi-phpcgi-phpfpm/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/simple.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/cgi-fastcgi-phpcgi-phpfpm/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/simple.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>细说 CGI、FastCGI、PHP-CGI 和 PHP-FPM 的关系</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="概念总结">概念总结</h2>
+
+<p>刚开始学习的 PHP 的时候，就会被几个词搞混：<code>CGI</code>、<code>FastCGI
+</code>、<code>PHP-CGI</code>、<code>PHP-FPM</code>，它们都是干什么活的？之间又有些什么联系和区别呢？接下来就先介绍它们的概念。</p>
+
+<h4 id="1-cgi">1. CGI</h4>
+
+<p><strong>CGI</strong> 是 <code>Common Gateway Interface</code> 的缩写，可以使客户端从网页浏览器向执行在网络服务器上的程序请求数据，它描述了客户端与服务器程序之间进行数据传输的标准，是一种<code>协议</code>。</p>
+
+<h4 id="2-fastcgi">2. FastCGI</h4>
+
+<p>顾名思义，是 CGI 的改进版，也是一种协议，实现上是一个常驻进程，它会一直运行着，在请求到来时不会重新启新进程去处理（ CGI 为 fork-and-execute 模式）。</p>
+
+<p>FastCGI 把 PHP 语言和 Web 服务器分开，故 Nginx 和 PHP 通常可以部署在不同机器上，以减轻 Nginx 和后端的压力。</p>
+
+<blockquote>
+<p>FastCGI 的主要特点有：</p>
+
+<p>语言无关的、可伸缩架构的 CGI 开放扩展</p>
+
+<p>将 CGI 解释器进程保持在内存中以此获取高性能</p>
+
+<p>不依赖任何 web 服务器内部架构</p>
+
+<p>平滑重新加载配置文件</p>
+</blockquote>
+
+<p><strong>FastCGI 的工作原理：</strong>（*markdown画图有问题，等解决后画出流程图会更清晰*）</p>
+
+<blockquote>
+<p>Web 服务器启动时载入 FastCGI 进程管理器（运行在 Web 服务器中）；</p>
+
+<p>FastCGI 进程管理器自身初始化，启动多个 CGI 解释器进程（可以看见有多个 PHP-CGI 进程），等待 Web 服务器的连接请求；</p>
+
+<p>当客户端请求到达 Web 服务器时，FastCGI 进程管理器选择并连接到其中一个 CGI 解释器，Web 服务器将 CGI 环境变量和标准输入传给 FastCGI 子进程 PHP-CGI；</p>
+
+<p>FastCGI 子进程完成处理后将标准输出和错误信息从同一连接返回给 Web 服务器，当 FastCGI 子进程关闭连接时请求也就完成，接着 FastCGI 子进程继续等待并处理来自 FastCGI 进程管理器的下一个连
+接。</p>
+</blockquote>
+
+<p>使用 FastCGI 的好处很明显：解析 PHP 配置文件、载入扩展、初始化数据结构，只在进程启动时发生一次，同时，持久数据库连接（persistent database connection）可以使用。</p>
+
+<blockquote>
+<p>FastCGI 的缺点有：</p>
+
+<p>多进程模式，会比 CGI 多线程模式消耗更多服务器内存</p>
+</blockquote>
+
+<h4 id="3-php-cgi">3. PHP-CGI</h4>
+
+<p>PHP-CGI 是 PHP 自带的 FastCGI 管理器。</p>
+
+<blockquote>
+<p>PHP-CGI 主要有这样的缺点：</p>
+
+<p>PHP 配置变更后需要要重启 PHP-CGI 才能生效，不可以平滑重启；</p>
+
+<p>直接杀死 PHP-CGI 进程后 PHP 就不能运行了，即守护进程不能平滑重新生成新的子进程。</p>
+</blockquote>
+
+<h4 id="4-php-fpm">4. PHP-FPM</h4>
+
+<p>PHP-FPM 是一个 PHP FastCGI 管理器，是只用于 PHP 的，它提供了更好的 PHP 进程管理方式，可以有效控制内存和进程、可以平滑重载 PHP 配置。</p>
+
+<p><strong>总结：</strong></p>
+
+<blockquote>
+<p>CGI &amp; FastCGI ：是一种通信标准，是协议；</p>
+
+<p>PHP-CGI ：是一个程序，用来解释 PHP 脚本；</p>
+
+<p>PHP-FPM ：是一个只用于 PHP 的进程管理器，提供更好的 PHP 进程管理方式，可以有效控制进程，平滑地加载 PHP 配置文件。</p>
+</blockquote>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="http://www.fastcgi.com/drupal/">FastCGI</a></p></li>
+
+<li><p><a href="http://php-fpm.org/">PHP-FPM</a></p></li>
+
+<li><p><a href="http://php.net/manual/zh/install.fpm.php">PHP 手册：FastCGI 进程管理器（FPM）</a></p></li>
+</ul>
+
+<blockquote>
+<p><a href="http://segmentfault.com/q/1010000000256516">segmentfault 讨论贴</a></p>
+</blockquote>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/cgi-fastcgi-phpcgi-phpfpm\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/cgi-fastcgi-phpcgi-phpfpm\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

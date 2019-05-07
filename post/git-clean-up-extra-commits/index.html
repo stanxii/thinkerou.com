@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Github 上给开源项目提交 PR 前如何清理无关的提交信息' />
+  <meta property = 'og:description' content = '背景 最近在学习 gRPC 的过程中尝试给项目提一些代码，但是得到项目组的两位大牛回复说提交代码时应该把无关的提交历史给删除，具体回复是这样的：
+@murgatroid99 这么回复的：
+ Can you please send this PR without all of the …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/git-clean-up-extra-commits/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/frustrated.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/git-clean-up-extra-commits/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/frustrated.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Github 上给开源项目提交 PR 前如何清理无关的提交信息</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="背景">背景</h2>
+
+<p>最近在学习 <a href="https://github.com/grpc/grpc">gRPC</a> 的过程中尝试给项目提一些代码，但是得到项目组的两位大牛回复说<strong>提交代码时应该把无关的提交历史给删除</strong>，具体回复是这样的：</p>
+
+<p>@murgatroid99 <a href="https://github.com/grpc/grpc/pull/6848">这么回复的</a>：</p>
+
+<blockquote>
+<p>Can you please send this PR without all of the irrelevant commits? All of the changes for this PR are in the second-to-last commit.</p>
+</blockquote>
+
+<p>@ctiller <a href="https://github.com/grpc/grpc/pull/6932">这么回复的</a>：</p>
+
+<blockquote>
+<p>I&rsquo;m not sure we want this to be blanket turned on for all platforms.</p>
+
+<p>Also, it&rsquo;d be good to clean up some of the spurious unrelated commits here.</p>
+</blockquote>
+
+<p>我能看懂他们说的是什么，就是说我提交代码时有太多的无关的提交历史应该清理了再提交，像<a href="https://thinkerou.com/static/image/clean_up_commit_before.png">这样</a>的：</p>
+
+<p><img src="https://thinkerou.com/static/image/clean_up_commit_before.png" alt="清理历史前的样子" /></p>
+
+<p>这确实是个问题，那该如何清理呢？</p>
+
+<h2 id="解决方案">解决方案</h2>
+
+<h4 id="1-使用命令-git-checkout-branch-name">1. 使用命令 <code>git checkout branch-name</code></h4>
+
+<p>切换到待清理的分支：</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ git checkout default_roots_pem
+Switched to branch 'default_roots_pem'
+</code></pre>
+
+<h4 id="2-使用命令-git-rebase-i-version-id">2. 使用命令 <code>git rebase -i version-id</code></h4>
+
+<p>指定 base 为需要删除的提交的前一次提交，其中 <code>version-id</code> 是通过命令 <code>git log</code> 根据需要选择的。</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ git rebase -i fa9b7c1bc6488be17d18007f45c57dac39ea5b79
+Successfully rebased and updated refs/heads/default_roots_pem.
+</code></pre>
+
+<p>执行该命令后会弹出<a href="https://thinkerou.com/static/image/clean_up_pick_before.png">文本信息</a>，里面记录了相关的提交日志：</p>
+
+<p><img src="https://thinkerou.com/static/image/clean_up_pick_before.png" alt="清理文本信息前的样子" /></p>
+
+<p>然后将里面无关的 <code>pick</code> 信息删除，就变成<a href="https://thinkerou.com/static/image/clean_up_pick_after.png">这样</a>的了：</p>
+
+<p><img src="https://thinkerou.com/static/image/clean_up_pick_after.png" alt="清理文本信息后的样子" /></p>
+
+<p>保存文本后退出编辑，如果有冲突需要根据提示进行冲突处理。</p>
+
+<p>当有冲突时，在保存文本文件退出后会有提示，然后运行 <code>git rebase --continue</code> 命令就会出现哪些文件产生了冲突：</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ git rebase -i fa9b7c1bc6488be17d18007f45c57dac39ea5b79
+
+It seems that there is already a rebase-merge directory, and
+I wonder if you are in the middle of another rebase.  If that is the
+case, please try
+    git rebase (--continue | --abort | --skip)
+If that is not the case, please
+    rm -fr &quot;/Users/thinkerou/Documents/opensource/grpc/.git/rebase-merge&quot;
+and run me again.  I am stopping in case you still have something
+valuable there.
+
+thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ git rebase --continue
+src/core/lib/surface/server.c: needs merge
+You must edit all merge conflicts and then
+mark them as resolved using git add
+</code></pre>
+
+<p>然后打开提示有冲突的文件，搜索 <code>&lt;&lt;&lt;&lt;</code> 或 <code>&gt;&gt;&gt;&gt;</code> 就能找到冲突的地方，进行合并处理后保存文件，并使用命令 <code>git add file-name</code> 进行文件添加。</p>
+
+<p>然后继续运行 <code>git rebase --continue</code> 命令，这时会弹出文本信息，将刚刚修改的文件提交信息前的 <code>#</code> 去掉后保存。</p>
+
+<p>重复上面的步骤，直到提示成功为止。</p>
+
+<blockquote>
+<p>核心步骤：</p>
+
+<p>git rebase &ndash;continue</p>
+
+<p>修改冲突文件并保存</p>
+
+<p>git add filename</p>
+
+<p>git rebase &ndash;continue</p>
+
+<p>修改弹出的文本信息里关于 filename 文件提交信息前的 <code>#</code></p>
+
+<p>重复上述步骤直到提示成功方可进行正式提交</p>
+</blockquote>
+
+<h4 id="3-使用命令-git-push-f-origin-branch-name">3. 使用命令 <code>git push -f origin branch-name</code></h4>
+
+<p>将更新提交到 <code>Github</code> 上，但是这里跟平常的 <code>push</code> 有所区别的是，需要参数 <code>-f</code> 执行强制提交，是因为当前本地的历史和远端的历史已经出现的分歧。</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ git push -f origin default_roots_pem
+Username for 'https://github.com': thinkerou
+Password for 'https://thinkerou@github.com':
+Counting objects: 15, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (13/13), done.
+Writing objects: 100% (15/15), 1.57 KiB | 0 bytes/s, done.
+Total 15 (delta 11), reused 0 (delta 0)
+To https://github.com/thinkerou/grpc.git
++ 1e60d3d...f3bc3b6 default_roots_pem -&gt; default_roots_pem (forced update)
+</code></pre>
+
+<p>这些操作完成后，在源项目的 <code>Pull requests</code> 下就会变成<a href="https://thinkerou.com/static/image/clean_up_commit_after.png">这样</a>：</p>
+
+<p><img src="https://thinkerou.com/static/image/clean_up_commit_after.png" alt="清理历史后的样子" /></p>
+
+<p>至此问题解决，结果看起来也清爽了很多。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><a href="https://git-scm.com/book/en/v2/Git-Branching-Rebasing">Git Branching-Rebasing</a></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/git-clean-up-extra-commits\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/git-clean-up-extra-commits\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

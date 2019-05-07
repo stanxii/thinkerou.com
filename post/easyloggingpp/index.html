@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '一个超简单的 C&#43;&#43; 日志文件' />
+  <meta property = 'og:description' content = '介绍 在平时的工作和学习中，编写一些 C&#43;&#43; 程序时，为了调式通常都是使用类似 printf 的函数和打断点的方式。但是，调式程序或者程序发布测试版后，记录程序执行日志也是一种比较有效的调式和收集问题信息的手段。在现在这个开源的时代，并不需要我们自己去写一套日志库（C&#43;&#43;版），开源的已经有很多了， …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/easyloggingpp/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/speakers.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/easyloggingpp/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/speakers.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>一个超简单的 C&#43;&#43; 日志文件</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="介绍">介绍</h2>
+
+<p>在平时的工作和学习中，编写一些 C++ 程序时，为了调式通常都是使用类似 <strong>printf</strong> 的函数和打断点的方式。但是，调式程序或者程序发布测试版后，记录程序执行日志也是一种比较有效的调式和收集问题信息的手段。在现在这个开源的时代，并不需要我们自己去写一套日志库（C++版），开源的已经有很多了，如：</p>
+
+<blockquote>
+<p><a href="https://github.com/gabime/spdlog">spdlog</a></p>
+
+<p><a href="https://github.com/log4cplus/log4cplus">log4cplus</a></p>
+
+<p><a href="https://github.com/mirror/boost">boost log</a></p>
+
+<p><a href="https://github.com/google/glog">glog</a></p>
+</blockquote>
+
+<p>在 Github 上以关键字 <strong>log</strong> 搜索就会出来很多相关的，但是这些库中以我的了解经验来看，要数 <strong>Easyloggingpp</strong> 最为简单了，使用无需其他任何外部依赖，仅有一个 <strong>easyloggin++.h</strong> 头文件。下文就对此做一些简要介绍，以作记录。</p>
+
+<h2 id="示例">示例</h2>
+
+<p>在编写 C++ 应用时，通常是以 EXE 或者 DLL 的形式存在，对于这两种不同形式，使用 Easyloggingpp 也有所区别。</p>
+
+<h4 id="1-在-exe-工程中使用-easyloggingpp">1. 在 EXE 工程中使用 Easyloggingpp</h4>
+
+<p>先看代码，如：</p>
+
+<pre><code>#include &quot;easylogging++.h&quot;
+
+INITIALIZE_EASYLOGGINGPP
+
+int main(void)
+{
+    LOG(INFO) &lt;&lt; &quot;easylogging++ test!&quot;;
+    return 0;
+}
+</code></pre>
+
+<p>代码看起来很简单，主要做了三件事：</p>
+
+<blockquote>
+<p>a. 引入 <strong>easylogging++.h</strong> 头文件</p>
+
+<p>b. 使用初始化宏进行初始化</p>
+
+<p>c. 使用日志宏进行日志输出（记录到文本）</p>
+</blockquote>
+
+<h4 id="2-在-dll-工程中使用-easyloggingpp">2. 在 DLL 工程中使用 Easyloggingpp</h4>
+
+<p>在 DLL 工程中使用时，有所区别，代码如：</p>
+
+<pre><code>// tells easylogging++ that it's used for DLL
+#define ELPP_AS_DLL
+// tells easylogging++ to export symbols
+#define ELPP_EXPORT_SYMBOLS
+
+#include &quot;easylogging++.h&quot;
+
+INITIALIZE_EASYLOGGINGPP
+
+int main(void)
+{
+    LOG(INFO) &lt;&lt; &quot;easylogging++ test!&quot;;
+    return 0;
+}
+</code></pre>
+
+<p>正如注释所说，需要使用宏 <strong>ELPP_AS_DLL</strong> 告诉 easylogging++ 是以 DLL 方式在使用它。</p>
+
+<p><strong>摘要一些常用的设置</strong></p>
+
+<blockquote>
+<ol>
+<li><p>如何读取配置文件？</p></li>
+
+<li><p>如何通过代码设置某项配置文件？</p></li>
+</ol>
+</blockquote>
+
+<p>对于问题1，可以参考如下代码：</p>
+
+<pre><code>// Load configuration from file
+el::Configurations conf(&quot;/path/to/config.conf&quot;);
+// Reconfigure single logger
+el::Loggers::reconfigureLogger(&quot;default&quot;, conf);
+</code></pre>
+
+<p>而对于问题2，则可以参考如下代码：</p>
+
+<pre><code>el::Configurations defaultConf;
+defaultConf.setToDefault();
+// Values are always std::string
+defaultConf.set(el::Level::Info, el::ConfigurationType::ToStandardOutput, &quot;false&quot;);
+el::Loggers::reconfigureLogger(&quot;default&quot;, defaultConf);
+</code></pre>
+
+<p>上面的代码是设置不要在命令行下打印出日志来，而是直接写到日志文件里去。</p>
+
+<h4 id="3-其它简要说明">3. 其它简要说明</h4>
+
+<p>Easyloggingpp 也支持配置文件方式来定义输出格式。</p>
+
+<p>关于 Easyloggingpp 的更多详细内容请阅读其 Github 上的说明，以及在实际项目或自己的小程序中使用以体会。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<blockquote>
+<p><a href="https://github.com/easylogging/easyloggingpp">Eaysloggingpp Github 地址</a></p>
+
+<p><a href="https://github.com/thinkerou/gtest-dll-test">在单元测试中使用 Easyloggingpp 示例</a></p>
+</blockquote>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/easyloggingpp\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/easyloggingpp\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

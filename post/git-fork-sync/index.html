@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Github 上 Fork 项目后如何同步源项目的更新' />
+  <meta property = 'og:description' content = '问题背景 最近 Fork 了 grpc 到我的 Github 帐号grpc下，以学习之然后记录点笔记上传，但是过段时间后发现原来的项目已经有了很多代码提交，那么我该如何将这些新提交的更新同步到我的帐号下的项目里呢？
+通过查阅 Github 帮助文档并通过关键字 sync fork 可以找到相应的解决 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/git-fork-sync/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/read.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/git-fork-sync/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/read.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Github 上 Fork 项目后如何同步源项目的更新</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="问题背景">问题背景</h2>
+
+<p>最近 Fork 了 <a href="https://github.com/grpc/grpc">grpc</a> 到我的 Github 帐号<a href="https://github.com/thinkerou/grpc">grpc</a>下，以学习之然后记录点笔记上传，但是过段时间后发现原来的项目已经有了很多代码提交，那么我该如何将这些新提交的更新同步到我的帐号下的项目里呢？</p>
+
+<p>通过查阅 <a href="https://help.github.com/">Github 帮助文档</a>并通过关键字 <code>sync</code> <code>fork</code> 可以找到相应的解决方案。</p>
+
+<h2 id="解决方案">解决方案</h2>
+
+<p>通过前述查阅可知，要解决 <strong>Fork 项目后如何同步源项目的更新？</strong>的问题，需要如下几个步骤：</p>
+
+<h4 id="1-使用-git-remote-v-命令查看远程状态">1. 使用 <code>git remote -v</code> 命令查看远程状态</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git remote -v
+origin  https://github.com/thinkerou/grpc.git (fetch)
+origin  https://github.com/thinkerou/grpc.git (push)
+</code></pre>
+</blockquote>
+
+<h4 id="2-使用-git-remote-add-upstream-命令给-fork-的项目添加上游仓库">2. 使用 <code>git remote add upstream</code> 命令给 Fork 的项目添加上游仓库</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git remote add upstream https://github.com/grpc/grpc.git
+</code></pre>
+</blockquote>
+
+<h4 id="3-再次使用-git-remote-v-查看远程状态">3. 再次使用 <code>git remote -v</code> 查看远程状态</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git remote -v
+origin  https://github.com/thinkerou/grpc.git (fetch)
+origin  https://github.com/thinkerou/grpc.git (push)
+upstream    https://github.com/grpc/grpc.git (fetch)
+upstream    https://github.com/grpc/grpc.git (push)
+</code></pre>
+</blockquote>
+
+<h4 id="4-使用-git-fetch-upstream-命令从上游仓库-fetch-分支到本地">4. 使用 <code>git fetch upstream</code> 命令从上游仓库 fetch 分支到本地</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git fetch upstream
+</code></pre>
+</blockquote>
+
+<h4 id="5-使用-git-checkout-master-命令切换到本地主干">5. 使用 <code>git checkout master</code> 命令切换到本地主干</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git checkout master
+</code></pre>
+</blockquote>
+
+<h4 id="6-使用-git-merge-upstream-master-命令进行合并">6. 使用 <code>git merge upstream/master</code> 命令进行合并</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git merge upstream/master
+</code></pre>
+</blockquote>
+
+<h4 id="7-使用-git-push-origin-master-命令提交到-github-项目下">7. 使用 <code>git push origin master</code> 命令提交到 Github 项目下</h4>
+
+<blockquote>
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/opensource/grpc$ git push origin master
+</code></pre>
+</blockquote>
+
+<p>至此，就完美解决了 <strong>Fork 项目后如何同步源项目的更新？</strong>的问题！</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">Configuring a remote for a fork</a></p></li>
+
+<li><p><a href="https://help.github.com/articles/syncing-a-fork/">Syncing a fork</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/git-fork-sync\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/git-fork-sync\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Python 深浅拷贝' />
+  <meta property = 'og:description' content = 'Python 拷贝现象 先看一段代码：
+&gt;&gt;&gt; a = [1, 2, 3] &gt;&gt;&gt; b = a &gt;&gt;&gt; b.append(4) &gt;&gt;&gt; b [1, 2, 3, 4] &gt;&gt;&gt; a [1, 2, 3, 4] …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/python-copy-deepcopy/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/speakers.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/python-copy-deepcopy/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/speakers.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Python 深浅拷贝</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="python-拷贝现象">Python 拷贝现象</h2>
+
+<p>先看一段代码：</p>
+
+<pre><code>&gt;&gt;&gt; a = [1, 2, 3]
+&gt;&gt;&gt; b = a
+&gt;&gt;&gt; b.append(4)
+&gt;&gt;&gt; b
+[1, 2, 3, 4]
+&gt;&gt;&gt; a
+[1, 2, 3, 4]
+&gt;&gt;&gt;
+</code></pre>
+
+<p>代码的原意是，变量 <code>b</code> 从变量 <code>a</code> 处拷贝后，然后修改 <code>b</code> 而不改变原来的变量 <code>a</code> 的值；但事实是，原变量的值却变了！</p>
+
+<p>问题现象所涉及到的点就是：<strong>Python 的对象赋值和深浅拷贝</strong>。</p>
+
+<blockquote>
+<p>在 Python 中赋值语句总是建立对象的引用值，而不是复制对象，这样看来 Python 变量更像是指针而不是数据存储区域。</p>
+</blockquote>
+
+<p>继续看如下代码：</p>
+
+<pre><code>&gt;&gt;&gt; a = [1, 2, 3]
+&gt;&gt;&gt; a[1] = a
+&gt;&gt;&gt; a
+[1, [...], 3]
+&gt;&gt;&gt;
+</code></pre>
+
+<p>这段代码的本意是想给 <code>a[1]</code> 重新赋值为 <code>[1, 2, 3]</code>，但是却死循环了（<code>[...]</code>代表死循环）。</p>
+
+<p>因为前面说过，Python 里没有复制对象，而是建立对象的引用值，即是<strong>类似指针操作</strong>，所以前述代码即是自己指向自己的指针，所以会导致死循环。</p>
+
+<blockquote>
+<p>Python 里没有变量，通常说的变量是一种标签，是引用，类似指针。</p>
+</blockquote>
+
+<h2 id="python-深浅拷贝">Python 深浅拷贝</h2>
+
+<p>前面的示例代码中，为了得到预期的 <code>[1, [1, 2, 3], 3]</code> 结果，就不能直接将 <code>a[1]</code> 指向 <code>a</code> 引用的对象本身，而是需要将先 <code>a</code> 对象本身<strong>复制</strong>出来成为一个新对象，然后再将 <code>a[1]</code> 指向这个新对象。</p>
+
+<p>Python 里复制对象操作因对象类型而异，复制列表的操作为：</p>
+
+<pre><code>b = a[:]
+</code></pre>
+
+<p>接下来再看看一段示例代码：</p>
+
+<pre><code>&gt;&gt;&gt; a = [1, 2, ['a', 'b']]
+&gt;&gt;&gt; b = a[:]
+&gt;&gt;&gt; a[0] = 100
+&gt;&gt;&gt; a[2][0] = 'xyz'
+&gt;&gt;&gt; a
+[100, 2, ['xyz', 'b']]
+&gt;&gt;&gt; b
+[1, 2, ['xyz', 'b']]
+&gt;&gt;&gt;
+</code></pre>
+
+<p>变量 <code>b</code> 现在是 <code>a</code> 的拷贝了，但是 <code>b[2][0]</code> 为什么却也变了呢？</p>
+
+<blockquote>
+<p>这种方式用于生成对象的拷贝或复制序列，而不再是引用和共享变量，但是只能顶层复制，即<strong>浅拷贝</strong>。</p>
+</blockquote>
+
+<p>因为列表复制操作 <code>a[:]</code> 只是浅拷贝，内部深层对象并未拷贝，所以会变。</p>
+
+<p>先来看看<strong>深浅拷贝</strong>的概念：</p>
+
+<blockquote>
+<p>浅拷贝：只拷贝父对象，不会拷贝对象的内部的子对象。</p>
+
+<p>深拷贝：拷贝对象及其子对象。</p>
+</blockquote>
+
+<p>Python 的 <code>copy</code> 库提供了<strong>深浅拷贝</strong>的功能，如下示例：</p>
+
+<pre><code>&gt;&gt;&gt; import copy
+&gt;&gt;&gt; a = [1, 2, 3, ['a', 'b', 'c']] # 原对象
+&gt;&gt;&gt; b = a # 赋值，传对象的引用
+&gt;&gt;&gt; c = copy.copy(a) # 对象拷贝，浅拷贝
+&gt;&gt;&gt; d = copy.deepcopy(a) # 对象拷贝，深拷贝
+&gt;&gt;&gt; a.append(5) # 修改对象a
+&gt;&gt;&gt; a[3].append('d') # 修改对象a中的子对象
+&gt;&gt;&gt; a
+[1, 2, 3, ['a', 'b', 'c', 'd'], 5]
+&gt;&gt;&gt; b
+[1, 2, 3, ['a', 'b', 'c', 'd'], 5]
+&gt;&gt;&gt; c
+[1, 2, 3, ['a', 'b', 'c', 'd']]
+&gt;&gt;&gt; d
+[1, 2, 3, ['a', 'b', 'c']]
+&gt;&gt;&gt;
+</code></pre>
+
+<p>综上，在 Python 里需要对对象进行拷贝时，需要弄清楚是<strong>深拷贝还是浅拷贝</strong>操作？</p>
+
+<p>如果是浅拷贝则可以使用<strong>列表复制</strong>和<strong>copy.copy()</strong>两种方式，如果是深拷贝则须使用<strong>copy.deepcopy()</strong>方法。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><a href="http://my.oschina.net/leejun2005/blog/145911?fromerr=1evGaukk">深入理解 Python 中的赋值、引用、拷贝和作用域</a></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/python-copy-deepcopy\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/python-copy-deepcopy\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

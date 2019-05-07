@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'PHP 的 empty 函数' />
+  <meta property = 'og:description' content = '问题是这样的 描述问题现象前，先上代码：
+// $ret[&#39;errno&#39;] 的值由更新 update 数据库返回 // update 操作会把 affected_rows 值返回 if (empty($ret[&#39;errno&#39;])) { // update 不成功则 insert }  根据代码看，问 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/php-empty/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/speakers.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/php-empty/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/speakers.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>PHP 的 empty 函数</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="问题是这样的">问题是这样的</h2>
+
+<p>描述问题现象前，先上代码：</p>
+
+<pre><code>// $ret['errno'] 的值由更新 update 数据库返回
+// update 操作会把 affected_rows 值返回
+if (empty($ret['errno'])) {
+    // update 不成功则 insert
+}
+</code></pre>
+
+<p>根据代码看，问题已经很明显了：</p>
+
+<blockquote>
+<p>如果 affected_rows 等于 0，$ret[&lsquo;errno&rsquo;] 就等于 0，那么它会就是 empty 的吗？</p>
+
+<p>熟悉 PHP 的你，肯定觉得是个小儿科的问题了，但是对于刚看 PHP 两天的我来说，这个问题还是值得记录下。</p>
+</blockquote>
+
+<p>接下来就记录下，在 PHP 里什么内容会被认为是 empty 的？！</p>
+
+<h2 id="empty-函数判断的是什么">empty 函数判断的是什么</h2>
+
+<p>函数 empty 检查一个变量是否为空，函数原型如下：</p>
+
+<blockquote>
+<p>bool empty(mixed $var)</p>
+
+<p>当变量 $var 不存在或者它的值等同于 <code>false</code> 时，那么就会被认为是空的。</p>
+
+<p>没有警告产生，即使变量不存在，意味着 empty() 本质上与下列语句等价：</p>
+
+<p><code>!isset($var) || $var === false</code></p>
+</blockquote>
+
+<p>当 $var 存在且是一个<code>非空非零</code>的值时返回 <code>false</code>，否则返回<code>true</code>。</p>
+
+<p>那么，在 PHP 里哪些东西会被认为是空的呢？如下：</p>
+
+<blockquote>
+<p>&rdquo;&rdquo; 空字符串</p>
+
+<p>0 整数0</p>
+
+<p>0.0 浮点数0</p>
+
+<p>&ldquo;0&rdquo; 字符串0</p>
+
+<p>null</p>
+
+<p>false</p>
+
+<p>array() 空数组</p>
+
+<p>$var 已声明但没有值的变量</p>
+</blockquote>
+
+<p>再回到开始的问题，想当然的以为 $ret[&lsquo;errno&rsquo;]) 被设置为 0 后，empty 就会为 false，或许这跟 isset 函数搞混了。</p>
+
+<blockquote>
+<p>bool isset(mixed $var [, mixed $&hellip;])</p>
+
+<p>检查变量是否设置，且不是 null</p>
+
+<p>如果使用 unset 释放变量后，它将不再是 isset</p>
+
+<p>如果使用 isset 测试一个被设置为 null 的变量，将返回 false</p>
+
+<p>注意：null 字节（&rdquo;\0&rdquo;）并不等同于 null 常数</p>
+</blockquote>
+
+<p>同时需要注意的是，另外一个函数 <code>is_null</code> ：</p>
+
+<blockquote>
+<p>bool is_null(mixed $var)</p>
+
+<p>如果 $var 是 null 则返回 true，否则返回 false</p>
+</blockquote>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="http://php.net/manual/en/function.empty.php">PHP 手册：empty</a></p></li>
+
+<li><p><a href="http://stackoverflow.com/questions/2216052/how-to-tell-if-a-php-array-is-empty">stackoverflow: How to tell if a PHP array is empty?</a></p></li>
+
+<li><p><a href="http://stackoverflow.com/questions/718986/checking-if-the-string-is-empty">stackoverflow: Checking if the string is empty</a></p></li>
+
+<li><p><a href="https://www.virendrachandak.com/techtalk/php-isset-vs-empty-vs-is_null/">PHP isset() vs empty() vs is_null()</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/php-empty\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/php-empty\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

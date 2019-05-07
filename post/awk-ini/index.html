@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '一句 awk 获取 ini 文件的值' />
+  <meta property = 'og:description' content = '问题背景 使用脚本语言操作 ini 文件已经有很多现有的方案了，比如 python 的 ConfigParser 模块等。现在有一些 shell 脚本用于执行自动化工作，但是每个模块都有自己的配置文件，修改起来很不方便，能不能收敛到一个配置文件？同时不使用 python 脚本，直接使用 awk …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/awk-ini/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/artist.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/awk-ini/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/artist.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>一句 awk 获取 ini 文件的值</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="问题背景">问题背景</h2>
+
+<p>使用脚本语言操作 <code>ini</code> 文件已经有很多现有的方案了，比如 <code>python</code> 的 <code>ConfigParser</code> 模块等。现在有一些 shell 脚本用于执行自动化工作，但是每个模块都有自己的配置文件，修改起来很不方便，能不能收敛到一个配置文件？同时不使用 python 脚本，直接使用 <code>awk</code> 和 <code>sed</code> 这样的 shell 脚本来搞定呢？</p>
+
+<h2 id="解决方案">解决方案</h2>
+
+<p>假设 ini 文件 test.ini 为如下：</p>
+
+<pre><code>[section1]
+ip=10.11.12.13
+port=1234
+
+[section2]
+ip=10.21.22.23
+port=5678
+</code></pre>
+
+<p>为了能够获取 section2 下 ip 的值，需要如下几个步骤：</p>
+
+<blockquote>
+<ol>
+<li>以 <code>=</code> 分隔每行</li>
+<li>找到 <code>[section2]</code></li>
+<li>满足 1 以后，从此开始找到第一个 ip</li>
+<li>打印 ip 对应的值，停止，退出</li>
+</ol>
+</blockquote>
+
+<h3 id="1-分隔每行">1. 分隔每行</h3>
+
+<p>在 awk 里可以使用 <code>-F</code> 来指定每行的分隔符号，如下：</p>
+
+<pre><code>awk -F '=' '{print $1}' test.ini
+# 打印结果
+ip
+port
+
+[section2]
+ip
+port
+</code></pre>
+
+<h3 id="2-找到-section2">2. 找到 <code>[section2]</code></h3>
+
+<p>为了找到对应的 <code>[section2]</code> 和 <code>ip</code> 的值，使用 awk 的正则表达式，关于此可阅读参考资料。</p>
+
+<p>在 awk 里正则表达式的基本语法为：</p>
+
+<pre><code>awk -F '=' '/'section2'/{print $1}' test.ini
+# 打印结果
+[section2]
+</code></pre>
+
+<p>即使用 <code>/正则式/{表达式}</code> 这种形式来书写，使用 <code>//</code> 将正则式包装起来，只有当正则式匹配时才会执行后面的表达式。</p>
+
+<p>为了找到 <code>[section2]</code> 行，所以需要书写这样的语句：</p>
+
+<pre><code>awk -F '=' '/\['section2'\]/{print $1}' test.ini
+# 打印结果
+[section2]
+</code></pre>
+
+<p>由于 <code>[]</code> 已经在正则表达式里被使用了，所以这里需要使用 <code>\</code> 对其进行转义。</p>
+
+<h3 id="3-找到-ip-对应的值">3. 找到 ip 对应的值</h3>
+
+<p>同理，要找到 ip 对应的值就很容易了：</p>
+
+<pre><code>awk -F '=' '$1~/'ip'/{print $2}' test.ini
+# 打印结果
+10.11.12.13
+10.21.22.23
+</code></pre>
+
+<p>这句话的意思是，被 <code>=</code> 分隔后的，第一个串如果与 <code>ip</code> 匹配，则打印该行的第二个串，也就是 ip 对应的值，在 awk 的正则表达式里，使用 <code>~</code> 来表示匹配。</p>
+
+<h3 id="4-完美解决">4. 完美解决</h3>
+
+<p>两个独立的语句书写起来是没有什么难度的，那么要把它们组合起来完成需求该如何做呢？</p>
+
+<pre><code>awk -F '=' '/\['section2'\]/{t=1}t==1&amp;&amp;$1~/'ip'/{print $2;exit}' test.ini
+# 打印结果
+10.21.22.23
+</code></pre>
+
+<p>结果如预期，完美解决！</p>
+
+<p>但是这是为什么呢？</p>
+
+<p>语句执行后，首先找到匹配 <code>[section2]</code> 的行，这时设置一个变量 <code>t</code> 并给其赋值，当 t 被赋值后，就会判断是否相等，相等后就会执行 <code>&amp;&amp;</code> 后面的语句，即找到第一个与 <code>ip</code> 匹配的行，输出对应的值，并结束整个语句的执行。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="http://coolshell.cn/articles/9070.html">AWK 简明教程</a></p></li>
+
+<li><p><a href="http://www.gnu.org/software/gawk/manual/gawk.html#Regexp">The GNU Awk User’s Guide</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/awk-ini\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/awk-ini\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

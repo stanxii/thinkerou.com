@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = 'Git submodule 使用记录' />
+  <meta property = 'og:description' content = '问题背景 最近在阅读 grpc 相关的代码，在阅读前需要先让代码跑起来，然后跟着 INSTALL 里的说明进行编译，里面有这样的步骤：
+git submodule update --init  这是第一次遇见 git 的 submoduel 参数，从参数名字可以大概知道是要干什么事，但是具体是如何做 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/git-submodule/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/fast-lane.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/git-submodule/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/fast-lane.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>Git submodule 使用记录</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="问题背景">问题背景</h2>
+
+<p>最近在阅读 <a href="http://www.grpc.io/"><strong>grpc</strong></a> 相关的代码，在阅读前需要先让代码跑起来，然后跟着 <strong>INSTALL</strong> 里的说明进行编译，里面有这样的步骤：</p>
+
+<pre><code>git submodule update --init
+</code></pre>
+
+<p>这是第一次遇见 <code>git</code> 的 <code>submoduel</code> 参数，从参数名字可以大概知道是要干什么事，但是具体是如何做的并不知道，所以有必要认真阅读 <code>git</code> 的 <code>submoduele</code> 参数相关的资料来了解其使用。</p>
+
+<h2 id="使用详情">使用详情</h2>
+
+<p>先来看看命令 <code>git submodule help</code> 输出的信息：</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/thinkerou.github.io$ git submodule help
+usage: git submodule [--quiet] add [-b &lt;branch&gt;] [-f|--force] [--name &lt;name&gt;] [--reference &lt;repository&gt;] [--] &lt;repository&gt; [&lt;path&gt;]
+or: git submodule [--quiet] status [--cached] [--recursive] [--] [&lt;path&gt;...]
+or: git submodule [--quiet] init [--] [&lt;path&gt;...]
+or: git submodule [--quiet] deinit [-f|--force] [--] &lt;path&gt;...
+or: git submodule [--quiet] update [--init] [--remote] [-N|--no-fetch] [-f|--force] [--checkout|--merge|--rebase] [--reference &lt;repository&gt;] [--recursive] [--] [&lt;path&gt;...]
+or: git submodule [--quiet] summary [--cached|--files] [--summary-limit &lt;n&gt;] [commit] [--] [&lt;path&gt;...]
+or: git submodule [--quiet] foreach [--recursive] &lt;command&gt;
+or: git submodule [--quiet] sync [--recursive] [--] [&lt;path&gt;...]
+</code></pre>
+
+<p>接下来就以 <code>grpc</code> 代码来作为示例，在 <code>grpc</code> 源代码目录下有这样一个特殊的文件：</p>
+
+<pre><code>thinkerou@MacBook-Pro-thinkerou:~/Documents/opensource/grpc$ ls -la
+-rw-r--r--   1 baidu  staff     665  3 22 20:27 .gitmodules 
+</code></pre>
+
+<p>从文件名可以看出是跟本文讨论的 <code>submodule</code> 相关的。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="http://www.kafeitu.me/git/2012/03/27/git-submodule.html">Git submodule 使用完整教程</a></p></li>
+
+<li><p><a href="https://git-scm.com/doc">Git Documentation</a></p></li>
+
+<li><p><a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000">Git 教程</a></p></li>
+
+<li><p><a href="http://www.bootcss.com/p/git-guide/">Git 简易指南</a></p></li>
+
+<li><p><a href="https://git.oschina.net/progit/">Pro Git（中文版）</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/git-submodule\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/git-submodule\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

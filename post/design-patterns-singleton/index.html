@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '设计模式之单例模式' />
+  <meta property = 'og:description' content = '1. 目的 保证一个类仅有一个实例，并提供一个访问它的全局访问点。
+2. 动机 如何才能保证一个类只有一个实例，并且这个实例易于被访问？
+一个全局变量使得一个对象可以被访问，但它不能防止实例化多个对象。
+ 更好的办法是：让类自身负责保存它的唯一实例。
+ 这个类可以保证没有其它实例可以被创建，并且它可 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/design-patterns-singleton/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/stuck.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/design-patterns-singleton/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/stuck.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>设计模式之单例模式</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="1-目的">1. 目的</h2>
+
+<p>保证一个类仅有一个实例，并提供一个访问它的全局访问点。</p>
+
+<h2 id="2-动机">2. 动机</h2>
+
+<p>如何才能保证一个类只有一个实例，并且这个实例易于被访问？</p>
+
+<p>一个全局变量使得一个对象可以被访问，但它不能防止实例化多个对象。</p>
+
+<blockquote>
+<p>更好的办法是：让类自身负责保存它的唯一实例。</p>
+</blockquote>
+
+<p>这个类可以保证没有其它实例可以被创建，并且它可以提供一个访问该实例的方法，这就是单例（Singleton）模式。</p>
+
+<h2 id="3-适用性">3. 适用性</h2>
+
+<p>单例模式适用于如下情况：</p>
+
+<ul>
+<li>当类只能有一个实例，且客户可以从一个众所周知的访问点访问它时；</li>
+<li>当这个唯一实例应该是通过子类化扩展的，且客户应该无需更改代码就能使用一个扩展的实例时。</li>
+</ul>
+
+<h2 id="4-参与者">4. 参与者</h2>
+
+<p>定义一个 Instance 操作，允许客户访问它的唯一实例，Instance 是 C++ 中的一个<strong>静态成员函数</strong>；负责创建它自己的唯一实例。</p>
+
+<h2 id="5-协作">5. 协作</h2>
+
+<p>客户只能通过 Singleton 的 Instance 操作访问一个 Singleton 的实例。</p>
+
+<h2 id="6-效果">6. 效果</h2>
+
+<ul>
+<li><p>对唯一实例的受控访问</p>
+
+<ul>
+<li>因为 Singleton 类封装它的唯一实例，所以它可以严格的控制客户怎样以及何时访问它。</li>
+</ul></li>
+
+<li><p>缩小名空间</p>
+
+<ul>
+<li>单例模式是对全局变量的改进，避免了哪些存储唯一实例的全局变量污染名空间。</li>
+</ul></li>
+
+<li><p>允许对操作和表示的精化</p>
+
+<ul>
+<li>Singleton 类可以有子类，且用这个扩展类的实例来配置一个应用是很容易的。</li>
+</ul></li>
+</ul>
+
+<h2 id="7-实现">7. 实现</h2>
+
+<p>单例模式使得这个唯一实例是类的一般实例，但该类被写成只有一个实例能被创建，为了做到这的常用方法是：<strong>将创建这个实例的操作隐藏在一个类操作（即一个静态成员函数或是一个类方法）后面， 由它保证只有一个实例被创建</strong>。这个操作可以访问保存唯一实例的变量，而且它可以保证这个变量在返回值之前用这个唯一实例初始化。这种方法保证了单例在它首次使用前被创建和使用。</p>
+
+<p>在 C++ 中可以用 Singleton 类的静态成员函数 Instance 来定义这个类操作， Singleton 还定义一个静态成员变量 _instance，它包含一个指向它的唯一实例的指针。</p>
+
+<p>Singleton 类定义：</p>
+
+<pre><code>    class Singleton {
+        public:
+            static Singleton* Instance();
+        protected:
+            Singleton();
+        private:
+            static Singleton* _instance;
+    };
+</code></pre>
+
+<p>Singleton 类实现：</p>
+
+<pre><code>    Singleton* Singleton::_instance = 0;
+    
+    Singleton* Singleton::Instance() {
+        if(_instance == 0) {
+            _instance = new Singleton;
+        }
+        return _instance;
+    }
+</code></pre>
+
+<p>针对代码的几点说明：</p>
+
+<ul>
+<li>客户仅通过 Instance 成员函数访问这个单件；</li>
+<li>变量 _instance 初始化为 0，而静态成员函数 Instance 返回该变量值，如果其实为 0 则用唯一实例初始化它；</li>
+<li>Instance 使用 lazy 方式初始化，它的返回值直到被第一次访问时才被创建和保存。</li>
+</ul>
+
+<p><strong>注意：</strong>构造函数是保护型的，如果直接实例化 Singleton 的客户将会得到编译时错误信息，这也就保证了仅有一个实例可以被创建。</p>
+
+<p>因为变量 _instance 是一个指向 Singleton 对象的指针， Instance 成员函数可以将一个指向 Singleton 的子类的指针赋给这个变量。</p>
+
+<h2 id="8-双检测锁模式">8. 双检测锁模式</h2>
+
+<p>实现线程安全的 Instance 一种方式是：<strong>每次判断是否为 NULL 前加锁</strong>，但加锁是很慢的。</p>
+
+<p>事实上，只有第一次实例创建时才需要加锁，即双检测锁：</p>
+
+<pre><code>    Singleton* Singleton::Instance() {
+        if(_instance == 0) {
+            Lock lock;
+            if(_instance == 0) {
+                _instance = new Singleton;
+            }
+        }
+        return _instance;
+    }
+</code></pre>
+
+<p>在 C++11 中关于双检测锁可以阅读<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/">《Double-Checked Locking is Fixed In C++11》</a></p>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/design-patterns-singleton\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/design-patterns-singleton\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

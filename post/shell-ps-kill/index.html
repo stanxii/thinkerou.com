@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '命令行艺术之 ps 与 kill' />
+  <meta property = 'og:description' content = '概览 命令 ps 是 Process Status 的缩写，它是用来列出系统中当前运行的进程，列出的是它们的快照，也即是执行 ps 命令的那一刻的那些进程，如果需要动态的列出进程信息，则需要使用 top 命令。
+使用 ps 命令可以确定哪些进程正在运行及运行状态：是否结束、是否僵死、占用多少资源等。 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/shell-ps-kill/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/frustrated.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/shell-ps-kill/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/frustrated.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>命令行艺术之 ps 与 kill</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="概览">概览</h2>
+
+<p>命令 <code>ps</code> 是 <strong>Process Status</strong> 的缩写，它是用来列出系统中当前运行的进程，列出的是它们的快照，也即是执行 ps 命令的那一刻的那些进程，如果需要动态的列出进程信息，则需要使用 <code>top</code> 命令。</p>
+
+<p>使用 ps 命令可以确定哪些进程正在运行及运行状态：是否结束、是否僵死、占用多少资源等。</p>
+
+<blockquote>
+<p>Program 与 Process 区别与联系：</p>
+
+<p>Program（程序）：通常为 binary program，放在存储介质中（硬盘等），以实体文档存在；</p>
+
+<p>Process（进程）：程序被触发后，执行者的权限、属性、程序代码及所需资料都会被载入内存，作业系统会给这个内存内的单元一个唯一标识（PID），也即是进程就是一个正在运行中的程序。</p>
+
+<p>更多、详细信息请阅读<a href="http://linux.vbird.org/linux_basic/0440processcontrol.php#ps">《鸟哥的 Linux 私房菜》</a>。</p>
+</blockquote>
+
+<p>命令 ps 主要用于查看进程当前信息，而命令 kill 主要用于管理进程（杀死哪些进程）。</p>
+
+<p>在 Linux 系统中，进程有 5 种状态：</p>
+
+<blockquote>
+<p>运行：正在运行或在运行队列中等待</p>
+
+<p>中断：休眠中，受阻，在等待某个条件的形成或接收到信号</p>
+
+<p>不可中断：收到信号不唤醒和不可运行，必须等待直到中断发生</p>
+
+<p>僵死：进程已经终止，但进程描述符还在，直到父进程调用wait4后才释放</p>
+
+<p>停止：收到信号后停止运行</p>
+</blockquote>
+
+<p>对应的进程状态在 ps 命令中则使用如下标识来标记：</p>
+
+<blockquote>
+<p>R ：运行，Running or runnable (on run queue)</p>
+
+<p>S ：中断，Interruptible sleep (waiting for an event to complete)</p>
+
+<p>D ：不可中断，Uninterruptible sleep (usually IO)</p>
+
+<p>Z ：僵死，Defunct(&ldquo;zombie&rdquo;) process, terminated but not reaped by its parent</p>
+
+<p>T ：停止，Stopped, either by a job control signal or because it is being traced</p>
+</blockquote>
+
+<h2 id="top-命令">top 命令</h2>
+
+<blockquote>
+<p><strong>说明</strong></p>
+
+<p>在学习、使用 linux 命令过程中要善用 <code>help</code> 和 <code>man</code> 来查看命令参数，单纯的记忆是不可靠的，多查多用，熟能生巧。</p>
+</blockquote>
+
+<h4 id="1-命令参数">1. 命令参数</h4>
+
+<p>使用 <code>ps --help</code> （命令 <code>man ps</code> 会得到更多更全的信息）会得到如下信息：</p>
+
+<pre><code>[thinkerou ~]$ ps --help
+********* simple selection *********  ********* selection by list *********
+-A all processes                      -C by command name
+-N negate selection                   -G by real group ID (supports names)
+-a all w/ tty except session leaders  -U by real user ID (supports names)
+-d all except session leaders         -g by session OR by effective group name
+-e all processes                      -p by process ID
+T  all processes on this terminal     -s processes in the sessions given
+a  all w/ tty, including other users  -t by tty
+g  OBSOLETE -- DO NOT USE             -u by effective user ID (supports names)
+r  only running processes             U  processes for specified users
+x  processes w/o controlling ttys     t  by tty
+*********** output format **********  *********** long options ***********
+-o,o user-defined  -f full            --Group --User --pid --cols --ppid
+-j,j job control   s  signal          --group --user --sid --rows --info
+-O,O preloaded -o  v  virtual memory  --cumulative --format --deselect
+-l,l long          u  user-oriented   --sort --tty --forest --version
+-F   extra full    X  registers       --heading --no-heading --context
+                    ********* misc options *********
+-V,V  show version      L  list format codes  f  ASCII art forest
+-m,m,-L,-T,H  threads   S  children in sum    -y change -l format
+-M,Z  security data     c  true command name  -c scheduling class
+-w,w  wide output       n  numeric WCHAN,UID  -H process hierarchy
+</code></pre>
+
+<blockquote>
+<p>常用参数说明：</p>
+
+<p><strong>特别强调：</strong> <code>ps aux</code> 与 <code>ps -aux</code> 是不一样的，例如：<code>-u</code> 与 <code>u</code> 的区别。</p>
+
+<p>a, -A, -e 显示所有进程</p>
+
+<p>-a 显示同一终端下的所有进程</p>
+
+<p>c 显示进程真实名称</p>
+
+<p>e 显示环境变量</p>
+
+<p>f 显示程序间的关系</p>
+
+<p>-H 显示树状结构</p>
+
+<p>r 显示当前终端的进程</p>
+
+<p>T 显示当前终端的所有程序</p>
+
+<p>u 指定用户的所有进程</p>
+
+<p>-au 显示较详细的信息</p>
+
+<p>-aux 显示所有包含其它使用者的进程</p>
+</blockquote>
+
+<p>示例程序如下：</p>
+
+<pre><code>[thinkerou:~ ]$ ps aux
+USER              PID  %CPU %MEM      VSZ    RSS   TTY STAT STARTED      TIME COMMAND
+thinkerou         672   4.6  0.9  2750472  79572   ??  S     3:56下午   1:12.25 /
+</code></pre>
+
+<blockquote>
+<p>各列信息说明：</p>
+
+<p>USER : the owner of the process</p>
+
+<p>PID : a unique process identification number</p>
+
+<p>%CPU : CPU utilization of the process</p>
+
+<p>%MEM : ratio of the process&rsquo;s resident set size to the physical memory on the machine, expressed as a percentage</p>
+
+<p>VSZ : virtual memory size of the process in KiB</p>
+
+<p>RSS : the non-swqpped physical memory that a task has used in KiB</p>
+
+<p>TTY : controlling terminal</p>
+
+<p>STAT : multi-character process state.</p>
+
+<p>STARTED : starting time or date of the process</p>
+
+<p>TIME : cumulative CPU time</p>
+
+<p>COMMAND : the executed command with all its arguments as a string</p>
+</blockquote>
+
+<h4 id="2-使用示例">2. 使用示例</h4>
+
+<p><strong>显示所有进程</strong></p>
+
+<blockquote>
+<p>ps ax</p>
+
+<p>ps -ef</p>
+
+<p>ps aux #增加 u 显示进程的更详细信息</p>
+
+<p>ps -ef -f #增加 -f 显示进程的更详细信息</p>
+</blockquote>
+
+<p><strong>显示给定用户的进程</strong></p>
+
+<blockquote>
+<p>ps -f -u thinkerou</p>
+</blockquote>
+
+<p><strong>显示给定进程名或进程id的进程</strong></p>
+
+<blockquote>
+<p>ps -C nginx #必须提供完整的进程名</p>
+
+<p>ps -f -p 1234</p>
+
+<p>ps -ef | grep nginx #查找不记得完整名字的进程，得到完整进程名用于-C</p>
+</blockquote>
+
+<p><strong>根据CPU或MEM使用率给进程排序</strong></p>
+
+<blockquote>
+<p>ps aux &ndash;sort=-pcpu,+pmem</p>
+
+<p>ps aux &ndash;sort=-pcpu | head -5</p>
+</blockquote>
+
+<p><strong>以树型结构显示进程继承关系</strong></p>
+
+<blockquote>
+<p>ps -f &ndash;forest -C nginx</p>
+</blockquote>
+
+<p>** 显示一个父进程的子进程**</p>
+
+<blockquote>
+<p>ps -o pid,uname,comm -C nginx</p>
+
+<p>ps &ndash;ppid 1234</p>
+</blockquote>
+
+<p><strong>显示一个进程的线程</strong></p>
+
+<blockquote>
+<p>ps -p 1234 -L</p>
+</blockquote>
+
+<p><strong>指定显示列</strong></p>
+
+<blockquote>
+<p>ps -e -o pid,uname,pcpu,pmem,comm</p>
+</blockquote>
+
+<p><strong>显示进程运行时长</strong></p>
+
+<blockquote>
+<p>ps -e -o pid,comm,etime</p>
+</blockquote>
+
+<p><strong>改变 ps 为一个实时进程查看器</strong></p>
+
+<blockquote>
+<p>watch -n 1 &lsquo;ps -e -o pid,uname,cmd,pmem,pcpu &ndash;sort=-pmem,-pcpu | head -15&rsquo;</p>
+</blockquote>
+
+<h2 id="kill-命令">kill 命令</h2>
+
+<p>在使用 <code>kill</code> 命令来终止某个进程前，需要先使用 <code>ps</code>、<code>pstree</code>、<code>top</code>等命令获取进程ID（PID）。</p>
+
+<p>命令 kill 终止进程是通过向进程发送特定信号来完成的。</p>
+
+<blockquote>
+<p>常见信号有：</p>
+
+<p>SIGHUP，代号为 1 ：重新启动</p>
+
+<p>SIGINT，代号为 2 ：等同于使用 ctrl+c 来中断进程的运行</p>
+
+<p>SIGKILL，代号为 9 ：强制中断</p>
+
+<p>SIGTERM，代号为 15 ：正常结束，如果进程已经发生问题，则无效</p>
+
+<p>SIGSTOP，代号为 19 ：等同于使用 ctrl+z 来暂停进程的运行</p>
+</blockquote>
+
+<h4 id="1-命令参数-1">1. 命令参数</h4>
+
+<p>命令 kill 的参数有：</p>
+
+<blockquote>
+<p>-l : 信号，若不加信号代号，则显示所有信号名</p>
+
+<p>-a : 不限制命令名和进程号的对应关系</p>
+
+<p>-p : 只打印相关进程号，而不发送任何信号</p>
+
+<p>-s : 指定发送信号</p>
+
+<p>-u : 指定用户</p>
+</blockquote>
+
+<h4 id="2-使用示例-1">2. 使用示例</h4>
+
+<p><strong>杀掉指定进程</strong></p>
+
+<blockquote>
+<p>ps -ef | grep nginx #获取到nginx进程的PID为1234</p>
+
+<p>kill 1234</p>
+</blockquote>
+
+<p><strong>彻底结束一个进程</strong></p>
+
+<blockquote>
+<p>kill -9 1234</p>
+</blockquote>
+
+<p><strong>杀掉指定用户所有进程</strong></p>
+
+<blockquote>
+<p>kill -9 $(ps -ef | grep nginx)</p>
+
+<p>kill -u nginx</p>
+</blockquote>
+
+<p><strong>说明：</strong>init 进程是不可杀的。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><p><a href="https://kyup.com/tutorials/use-ps-kill-nice-manage-processes-linux/">How to use ps, kill and nice to manage processes in linux</a></p></li>
+
+<li><p><a href="http://linux.vbird.org/linux_basic/0440processcontrol.php#process_1">鸟哥的 Linux 私房菜：第十六章、程序管理与 SELinux 初探</a></p></li>
+
+<li><p><a href="http://www.binarytides.com/linux-ps-command/">10 basic examples of Linux ps command</a></p></li>
+
+<li><p><a href="http://linux.vbird.org/linux_basic/0440processcontrol.php#ps">Linux Programmer&rsquo;s Manual</a></p></li>
+
+<li><p><a href="http://www.cnblogs.com/peida/archive/2012/12/19/2824418.html">每天一个linux命令：ps 命令</a></p></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/shell-ps-kill\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/shell-ps-kill\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

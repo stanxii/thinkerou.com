@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '使用 gtest 给 DLL 工程编写单元测试' />
+  <meta property = 'og:description' content = '背景说明 任何时候给你的代码增加单元测试（或接口测试）都不晚，对于 C/C&#43;&#43; 使用比较广泛的单元测试框架应该非 googletest 莫属了。
+通常在工程代码中，使用 gtest 比较广泛的方式是以 lib 的形式来做单元测试，这种方式使用也比较简单直接，本文就不再赘述。
+但是，对于大部分工程代码 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/gtest-dll/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/speakers.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/gtest-dll/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/speakers.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>使用 gtest 给 DLL 工程编写单元测试</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="背景说明">背景说明</h2>
+
+<p>任何时候给你的代码增加单元测试（或接口测试）都不晚，对于 C/C++ 使用比较广泛的单元测试框架应该非 <a href="https://code.google.com/p/googletest/">googletest</a> 莫属了。</p>
+
+<p>通常在工程代码中，使用 gtest 比较广泛的方式是<strong>以 lib 的形式</strong>来做单元测试，这种方式使用也比较简单直接，本文就不再赘述。</p>
+
+<p>但是，对于大部分工程代码而言，并不是只有 EXE 文件，通常这些 EXE 文件都会依赖至少一个 DLL 文件，同时这些 DLL 文件并不会导出所有函数或类，而仅导出极少的东西给外部使用。（注：本文仅讨论 gtest 在 windows 上的应用）</p>
+
+<p>那么，问题来了，该如何使用 gtest 对 DLL 里没有导出的函数或类做单元测试呢？</p>
+
+<h2 id="解决方案">解决方案</h2>
+
+<p>做为<a href="https://github.com/thinkerou/gtest-dll-test">示例</a>，假设整个 Solution 包含如下三个 project：</p>
+
+<ul>
+<li><p>coreTest 工程：一个被 mainTest 工程应用的 DLL 库；</p></li>
+
+<li><p>mainTest 工程：整个 Solution 的 main 入口，调用 coreTest.dll 的 EXE 文件；</p></li>
+
+<li><p>unitTest 工程：将 gtest 包装成 DLL 的工程。</p></li>
+</ul>
+
+<p>详细的代码示例及工程属性设置请阅读完整的<a href="https://github.com/thinkerou/gtest-dll-test">示例代码</a>。</p>
+
+<p>为了使用 gtest 对 DLL 里没有导出的函数或类进行单元测试，或许会有如下两种方法：</p>
+
+<ul>
+<li><p>新建一个 EXE 工程，然后将所有被测文件包含进来，即可编写对应文件的 unittest，使用 gtest 的 lib 方式；</p></li>
+
+<li><p>将 gtest 包装成一个 DLL，然后直接在 DLL 工程里编写对应文件的 unittest。</p></li>
+</ul>
+
+<p>第一种方式的问题就是容易出现各种文件路径不对的问题，甚至有的时候需要修改产品代码的头文件；</p>
+
+<p>第二种方式就没有那么多问题了，但是需要注意的是，<strong>对工程属性的设置一定要正确</strong>，下文详细介绍。</p>
+
+<h2 id="重要说明">重要说明</h2>
+
+<p>在编写 gtest DLL 和使用 gtest DLL 时需要设置工程属性，特别强调如下：</p>
+
+<ul>
+<li><p>unitTest 工程需要添加 preprocessor 参数： <strong>GTEST_CREATE_SHARED_LIBRARY</strong></p></li>
+
+<li><p>在 unitTest DLL 工程里导出的 gtest 的 main 函数里需要<strong>显示 LoadLibrary(L&rdquo;coreTest.dll&rdquo;)</strong>，其他 DLL 类似</p></li>
+
+<li><p>在使用 unitTest DLL 的工程（DLL 和 EXE）里需要添加 preprocessor 参数：<strong>GTEST_LINKED_AS_SHARED_LIBRARY</strong></p></li>
+
+<li><p>在每个 unittest 文件里需要 <strong>#pragma comment(lib, &ldquo;unitTest.lib&rdquo;)</strong></p></li>
+</ul>
+
+<p><strong>总结：</strong>在工程中以 gtest DLL 的形式来编写单元测试就是这样的，重要的也容易出错的地方就是工程属性的设置。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<blockquote>
+<p><a href="https://code.google.com/p/googletest/">gtest 官网</a></p>
+
+<p><a href="https://github.com/thinkerou/gtest-dll-test">示例代码</a></p>
+
+<p><a href="https://code.google.com/p/googletest/source/browse/trunk/README?r=638">gtest README</a></p>
+</blockquote>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/gtest-dll\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/gtest-dll\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>

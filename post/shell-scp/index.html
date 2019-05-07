@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+  <title>thinkerou - Live! and Learn!</title>
+  <meta charset='utf-8'>
+  <meta name = 'viewport' content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta http-equiv = 'X-UA-Compatible' content = 'IE=edge'>
+  <meta name = 'SKYPE_TOOLBAR' content = 'SKYPE_TOOLBAR_PARSER_COMPATIBLE' />
+  <meta name = 'keywords' content = 'thinkerou'>
+  <meta property = 'og:locale' content = 'en_US' />
+  <meta property = 'og:type' content = 'article' />
+  <meta property = 'og:title' content = '命令行艺术之 scp' />
+  <meta property = 'og:description' content = '概览 在 linux 服务器上工作，免不了有这样的场景：
+ 从远程服务器上拷贝文件（文件夹）到本地或者另一台远程服务器上
+ 如果是远程服务器跟本地相关的文件下载、上传操作，可以使用 sz 和 rz 即可完成，但是在两个远程服务器之间就得另寻他法了，这时就是命令 scp 该上场了。 …'>
+  <meta property = 'og:url' content = 'https://thinkerou.com/post/shell-scp/' />
+  <meta property = 'og:image' content = 'https://thinkerou.com/images/speakers.jpg'/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href = 'https://thinkerou.com//images/icons/apple-touch-icon.png'>
+  <link rel="icon" type="image/png" sizes="32x32" href = 'https://thinkerou.com//images/icons/favicon-32x32.png'>
+  <link rel="icon" type="image/png" sizes="16x16" href= 'https://thinkerou.com//images/icons/favicon-16x16.png'>
+  <link rel="shortcut icon" href='https://thinkerou.com//images/icons/favicon.ico '/>
+  <link rel='canonical' href="https://thinkerou.com/post/shell-scp/">
+  <link rel = 'stylesheet' href = 'https://thinkerou.com/main.css' integrity = ''>
+   
+  <link rel="stylesheet" href="https://thinkerou.com//css/github.min.css">
+</head>
+
+  <body>
+    <div class = 'nav-drop'>
+  <div class = 'nav-body'>
+  
+    <a href = 'https://thinkerou.com/about/'>About</a>
+  
+    <a href = 'https://thinkerou.com/'>Blog</a>
+  
+    <a href = 'https://thinkerou.com/categories/development/'>Category A</a>
+  
+    <a href = 'https://thinkerou.com/categories/golang/'>Category B</a>
+  
+    <a href = 'https://thinkerou.com/tags/go/'>Tag B</a>
+  
+    <div class = 'nav-close'></div>
+  </div>
+</div>
+
+    <header class = 'nav' >
+  <nav class = 'nav-menu'>
+    <a href='https://thinkerou.com/' class='nav-brand'>thinkerou</a>
+  </nav>
+</header>
+
+    <main>
+      
+<section class = 'post_header' style = 'background-image:url(https://thinkerou.com/images/speakers.jpg);'>
+  <h1 class='post_title' itemprop='name headline'>命令行艺术之 scp</h1>
+  
+  
+  
+  
+  
+  </p>
+</section>
+<div class = 'post'>
+  <article class='post_content' itemprop='articleBody'>
+    
+
+<h2 id="概览">概览</h2>
+
+<p>在 linux 服务器上工作，免不了有这样的场景：</p>
+
+<blockquote>
+<p>从远程服务器上拷贝文件（文件夹）到本地或者另一台远程服务器上</p>
+</blockquote>
+
+<p>如果是远程服务器跟本地相关的文件下载、上传操作，可以使用 <code>sz</code> 和 <code>rz</code> 即可完成，但是在两个远程服务器之间就得另寻他法了，这时就是命令 <code>scp</code> 该上场了。</p>
+
+<h2 id="命令详解">命令详解</h2>
+
+<p>命令 <code>scp</code> 是 <code>Secure copy</code> 的缩写，类似的有 <code>cp</code> 命令，但它用于本机文件拷贝不能跨服务器，同时，命令 scp 是加密传输的。另外，命令 <code>rsync</code> 也能完成 scp 的工作，但当小文件较多时，rsync会导致磁盘 IO 过高。</p>
+
+<p>命令 <code>scp</code> 的主要工作是：</p>
+
+<blockquote>
+<p>在 linux 系统下基于 <code>ssh</code> 登录进行安全的远程文件拷贝命令</p>
+
+<p>服务器之间的文件拷贝和目录拷贝</p>
+</blockquote>
+
+<h4 id="1-命令格式">1. 命令格式</h4>
+
+<blockquote>
+<p>scp [参数] [原始路径] [目的路径]</p>
+</blockquote>
+
+<p>在终端上直接输入 scp 则会有这样的帮助信息：</p>
+
+<pre><code>usage: scp [-12346BCEpqrv] [-c cipher] [-F ssh_config] [-i identity_file]
+           [-l limit] [-o ssh_option] [-P port] [-S program]
+           [[user@]host1:]file1 ... [[user@]host2:]file2
+</code></pre>
+
+<h4 id="2-常用命令参数">2. 常用命令参数</h4>
+
+<blockquote>
+<p>-B 使用批处理，传输时不询问传输口令
+-C 使用压缩功能
+-p 保留原始文件的修改时间、访问时间和权限
+-r 递归拷贝目录，<strong>重要，常用！</strong></p>
+</blockquote>
+
+<h4 id="3-使用示例">3. 使用示例</h4>
+
+<p><strong>从本地（本机）服务器拷贝到远程服务器</strong></p>
+
+<blockquote>
+<p>scp local_file remote_username@remote_ip:remode_folder</p>
+
+<p>scp -r local_folder remote _username@remote_ip:remode_folder</p>
+</blockquote>
+
+<p><strong>从远程服务器拷贝到本地（本机）服务器</strong></p>
+
+<blockquote>
+<p>scp remote_username@remote_ip:remode_folder local_file</p>
+
+<p>scp -r remote _username@remote_ip:remode_folder local_folder</p>
+</blockquote>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><a href="http://linux.vbird.org/linux_basic/">鸟哥的 linux 私房菜</a></li>
+</ul>
+
+  </article>
+  <hr style="border:none;padding:0.75px;background:#f1f3f1;margin:1.5rem 0;"/>
+  
+<div id="disqus_thread"></div>
+<script>
+
+
+
+
+var disqus_config = function () {
+this.page.url = "https:\/\/thinkerou.com\/post\/shell-scp\/";  
+this.page.identifier = "https:\/\/thinkerou.com\/post\/shell-scp\/"; 
+};
+
+(function() { 
+var d = document, s = d.createElement('script');
+s.src = 'https://thinkerou.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+  
+  <aside>
+    
+    <ul class='flex post_aside'>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/keeping-git-log/' title = 'Keeping log of Git' style = 'background-image: url(https://thinkerou.com/images/posts/candy-bomber-4166906_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/git'>git</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/keeping-git-log/'>Keeping log of Git</a>
+    </h3>
+    <p class = 'pale'>What? I recently migrated the examples of Gin to one separate repository named …</p>
+  </div>
+</li>
+      
+       <li class = 'duo post_item'>
+  <a class = 'show' href='https://thinkerou.com/post/simplicite/' title = '《简单的艺术》读书笔记' style = 'background-image: url(https://thinkerou.com/images/posts/landscape-4129533_1280.jpg);'>
+  </a>
+  <div class = 'excerpt'>
+    <p class = 'post_tag'><a href = 'https://thinkerou.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0'>读书笔记</a></p>
+    <h3 class = 'post_link'>
+      <a href='https://thinkerou.com/post/simplicite/'>《简单的艺术》读书笔记</a>
+    </h3>
+    <p class = 'pale'>简单，就是拥有极少，把空间留给必需和精华。简单，让生活摆脱使人精力分散、紧张不安的偏见、拘束和压力，为我们提供很多问题的解决办法。
+不要再拥有过多的东西，你将省出更多时间来关注自己 …</p>
+  </div>
+</li>
+      
+    </ul>
+  </aside>
+</div>
+<script src = 'https://thinkerou.com/js/autosize.min.js'></script>
+<script src = 'https://thinkerou.com/js/timeago.js'></script>
+
+    </main>
+    <footer class = 'footer'>
+  <div class = 'footer_inner'>
+    <p class='mute'><a href=''>thinkerou</a> &copy; <span class='year'></span></p>
+    
+  </div>
+</footer>
+<script src = 'https://code.jquery.com/jquery-3.1.0.min.js'   integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s='   crossorigin='anonymous'></script>
+<script src = 'https://thinkerou.com//js/index.js'></script>
+
+<script src="https://thinkerou.com//js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Google Analytics -->
+  <script>
+    var _gaq=[['_setAccount','UA-42425385-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+
+
+
+  </body>
+</html>
